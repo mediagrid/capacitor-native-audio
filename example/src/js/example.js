@@ -1,6 +1,11 @@
 import { AudioPlayer } from '@mediagrid/capacitor-native-audio';
+import mainAudio from '../assets/karen_the_news_update.mp3';
+import backgroundAudio from '../assets/komiku_bicycle.mp3';
+
+const mainAudioHref = new URL(mainAudio, import.meta.url).href;
+const bgAudioHref = new URL(backgroundAudio, import.meta.url).href;
 
 window.testEcho = () => {
-  const inputValue = document.getElementById('echoInput').value;
-  AudioPlayer.echo({ value: inputValue });
+  console.log(mainAudioHref);
+  console.log(bgAudioHref);
 };
