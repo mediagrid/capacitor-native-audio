@@ -5,13 +5,15 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
-import app.discipulus.main.MainActivity;
+
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.android.exoplayer2.ui.DefaultMediaDescriptionAdapter;
 import com.google.android.exoplayer2.ui.PlayerNotificationManager;
+
 import java.util.HashMap;
 
 public class AudioPlayerService extends Service {
@@ -189,7 +191,7 @@ public class AudioPlayerService extends Service {
                         PendingIntent.getService(
                             appContext,
                             0,
-                            new Intent(appContext, MainActivity.class),
+                            new Intent(appContext, getApplication().getClass()),
                             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
                         )
                     )

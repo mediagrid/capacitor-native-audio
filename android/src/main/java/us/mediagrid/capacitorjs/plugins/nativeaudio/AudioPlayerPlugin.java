@@ -11,13 +11,14 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
-import app.discipulus.main.audio.AudioPlayerService.AudioPlayerServiceBinder;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import java.util.HashMap;
+
+import us.mediagrid.capacitorjs.plugins.nativeaudio.AudioPlayerService.AudioPlayerServiceBinder;
 
 @CapacitorPlugin(name = "AudioPlayer")
 public class AudioPlayerPlugin extends Plugin {
@@ -517,7 +518,7 @@ public class AudioPlayerPlugin extends Plugin {
     }
 
     private Context getContextForAudioService() {
-        return getBridge().getActivity().getApplicationContext();
+        return this.getActivity().getApplicationContext();
     }
 
     private void createNotificationChannel() {
