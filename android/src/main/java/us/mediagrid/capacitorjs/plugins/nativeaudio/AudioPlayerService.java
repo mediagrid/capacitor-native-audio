@@ -191,7 +191,7 @@ public class AudioPlayerService extends Service {
                         PendingIntent.getService(
                             appContext,
                             0,
-                            new Intent(appContext, getApplication().getClass()),
+                            new Intent(appContext, appContext.getClass()),
                             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
                         )
                     )

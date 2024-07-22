@@ -27,13 +27,14 @@ await AudioPlayer.create({
   loop: true,
 }).catch(ex => setError(ex));
 
+await AudioPlayer.initialize({ audioId: audioId }).catch(ex => setError(ex));
+
 addClickEvent('playButton', () => {
   AudioPlayer.play({ audioId });
 });
 
 function addClickEvent(htmlId: string, callback: () => void): void {
   const el = document.getElementById(htmlId);
-  console.log(el);
 
   if (el) {
     el.onclick = callback;
