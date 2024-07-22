@@ -16,19 +16,25 @@
         Example Using the Audio Plugin
       </h1>
       <div class="mt-4 text-center">
-        <button id="playButton" class="btn bg-blue-600 text-white">Play</button>
-        <button
-          id="pauseButton"
-          class="btn bg-yellow-600 text-white"
-          onclick=""
-        >
-          Pause
-        </button>
-        <button id="stopButton" class="btn bg-red-600 text-white" onclick="">
-          Stop
+        <div>
+          <button id="playButton" class="btn bg-green-600 text-white">
+            Play
+          </button>
+          <button id="pauseButton" class="btn bg-yellow-600 text-white">
+            Pause
+          </button>
+          <button id="stopButton" class="btn bg-blue-600 text-white">
+            Stop
+          </button>
+        </div>
+        <p>Status: <span id="status">stopped</span></p>
+        <p>Duration: <span id="duration">0</span></p>
+        <p>Current time: <span id="currentTime">0</span></p>
+        <p id="error" class="text-red-500 mt-4"></p>
+        <button id="cleanupButton" class="btn bg-red-600 text-white">
+          Cleanup
         </button>
       </div>
-      <p id="error" class="text-red-500 text-center mt-4"></p>
     </main>
     <footer class="text-xs mt-4 text-center">
       <div>

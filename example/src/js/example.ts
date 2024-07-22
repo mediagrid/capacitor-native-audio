@@ -9,32 +9,119 @@ const bgAudioHref = new URL(backgroundAudio, import.meta.url).href;
 const audioId = generateAudioId();
 const bgAudioId = generateAudioId();
 
-await AudioPlayer.create({
-  audioId: audioId,
-  audioSource: mainAudioHref,
-  friendlyTitle: 'My Test Audio',
-  useForNotification: true,
-  isBackgroundMusic: false,
-  loop: false,
-}).catch(ex => setError(ex));
+console.log(`audioId: ${audioId}, bgAudioId: ${bgAudioId}`);
 
-await AudioPlayer.create({
-  audioId: bgAudioId,
-  audioSource: bgAudioHref,
-  friendlyTitle: '',
-  useForNotification: false,
-  isBackgroundMusic: true,
-  loop: true,
-}).catch(ex => setError(ex));
+let isInitialized = false;
 
-await AudioPlayer.initialize({ audioId: audioId }).catch(ex => setError(ex));
+async function initialize(): Promise<void> {
+  isInitialized = true;
 
-addClickEvent('playButton', () => {
-  AudioPlayer.play({ audioId });
+  await AudioPlayer.create({
+    audioId: audioId,
+    audioSource: mainAudioHref,
+    friendlyTitle: 'My Test Audio',
+    useForNotification: true,
+    isBackgroundMusic: false,
+    loop: false,
+  }).catch(ex => setError(ex));
+
+  await AudioPlayer.create({
+    audioId: bgAudioId,
+    audioSource: bgAudioHref,
+    friendlyTitle: '',
+    useForNotification: false,
+    isBackgroundMusic: true,
+    loop: true,
+  }).catch(ex => setError(ex));
+
+  AudioPlayer.onAudioReady({ audioId: audioId }, async () => {
+    setText(
+      'duration',
+      Math.ceil(
+        (await AudioPlayer.getDuration({ audioId: audioId })).duration,
+      ).toString(),
+    );
+  });
+
+  AudioPlayer.onPlaybackStatusChange({ audioId: audioId }, result => {
+    setText('status', result.status);
+
+    switch (result.status) {
+      case 'playing':
+        AudioPlayer.setVolume({ audioId: bgAudioId, volume: 0.5 });
+        AudioPlayer.play({ audioId: bgAudioId });
+        break;
+      case 'paused':
+        AudioPlayer.pause({ audioId: bgAudioId });
+        break;
+      case 'stopped':
+        AudioPlayer.stop({ audioId: bgAudioId });
+        stopCurrentPositionUpdate(true);
+        break;
+      default:
+        AudioPlayer.stop({ audioId: bgAudioId });
+        break;
+    }
+  });
+
+  await AudioPlayer.initialize({ audioId: audioId }).catch(ex => setError(ex));
+  await AudioPlayer.initialize({ audioId: bgAudioId }).catch(ex =>
+    setError(ex),
+  );
+}
+
+addClickEvent('playButton', async () => {
+  if (!isInitialized) {
+    await initialize();
+  }
+
+  await AudioPlayer.play({ audioId });
+  startCurrentPositionUpdate();
 });
 
-function addClickEvent(htmlId: string, callback: () => void): void {
-  const el = document.getElementById(htmlId);
+addClickEvent('pauseButton', () => {
+  stopCurrentPositionUpdate();
+  AudioPlayer.pause({ audioId });
+});
+
+addClickEvent('stopButton', () => {
+  stopCurrentPositionUpdate(true);
+  AudioPlayer.stop({ audioId });
+});
+
+addClickEvent('cleanupButton', async () => {
+  setText('status', 'stopped');
+  stopCurrentPositionUpdate(true);
+  await AudioPlayer.destroy({ audioId: bgAudioId });
+  AudioPlayer.destroy({ audioId: audioId });
+
+  isInitialized = false;
+});
+
+let currentPositionIntervalId = 0;
+
+function startCurrentPositionUpdate(): void {
+  currentPositionIntervalId = window.setInterval(async () => {
+    setText(
+      'currentTime',
+      Math.round(
+        (await AudioPlayer.getCurrentTime({ audioId: audioId })).currentTime,
+      ).toString(),
+    );
+  }, 1000);
+}
+
+function stopCurrentPositionUpdate(resetText = false): void {
+  clearInterval(currentPositionIntervalId);
+  currentPositionIntervalId = 0;
+
+  if (resetText) {
+    setText('currentTime', '0');
+  }
+}
+
+function addClickEvent(elementId: string, callback: () => void): void {
+  const el = document.getElementById(elementId);
 
   if (el) {
     el.onclick = callback;
@@ -48,9 +135,13 @@ function generateAudioId(): string {
 function setError(exception: unknown) {
   const ex = exception as CapacitorException;
 
-  const el = document.getElementById('error');
+  setText('error', ex.message);
+}
+
+function setText(elementId: string, text: string): void {
+  const el = document.getElementById(elementId);
 
   if (el) {
-    el.innerText = ex.message;
+    el.innerText = text;
   }
 }
