@@ -5,7 +5,9 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ServiceInfo;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -209,7 +211,11 @@ public class AudioPlayerService extends Service {
                             if (ongoing) {
                                 // Make sure the service will not get destroyed while playing media
                                 Log.i(TAG, "Notification posted, starting foreground");
-                                startForeground(notificationId, notification);
+                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                                    startForeground(notificationId, notification);
+                                } else {
+                                    startForeground(notificationId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
+                                }
                             } else {
                                 // Make notification cancellable
                                 Log.i(TAG, "Notification posted, stopping foreground");

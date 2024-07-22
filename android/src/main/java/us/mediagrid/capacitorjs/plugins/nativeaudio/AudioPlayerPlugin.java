@@ -11,11 +11,13 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
+
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+
 import java.util.HashMap;
 
 import us.mediagrid.capacitorjs.plugins.nativeaudio.AudioPlayerService.AudioPlayerServiceBinder;
@@ -187,7 +189,11 @@ public class AudioPlayerPlugin extends Plugin {
 
             if (!audioPlayerService.isRunning()) {
                 Log.i(TAG, String.format("Play for audio source ID %s is starting service", audioId(call)));
-                getContextForAudioService().startService(AudioPlayerService.newIntent(getContextForAudioService()));
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                    getContextForAudioService().startService(AudioPlayerService.newIntent(getContextForAudioService()));
+                } else {
+                    getContextForAudioService().startForegroundService(AudioPlayerService.newIntent(getContextForAudioService()));
+                }
             }
 
             new Handler(Looper.getMainLooper())
