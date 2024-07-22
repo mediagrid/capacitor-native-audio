@@ -1,8 +1,8 @@
-interface AudioPlayerDefaultParams {
+export interface AudioPlayerDefaultParams {
   audioId: string;
 }
 
-interface AudioPlayerPrepareParams extends AudioPlayerDefaultParams {
+export interface AudioPlayerPrepareParams extends AudioPlayerDefaultParams {
   audioSource: string;
   friendlyTitle: string;
   useForNotification: boolean;
@@ -10,11 +10,11 @@ interface AudioPlayerPrepareParams extends AudioPlayerDefaultParams {
   loop?: boolean;
 }
 
-interface AudioPlayerListenerParams {
+export interface AudioPlayerListenerParams {
   audioId: string;
 }
 
-interface AudioPlayerListenerResult {
+export interface AudioPlayerListenerResult {
   callbackId: string;
 }
 

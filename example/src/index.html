@@ -12,16 +12,23 @@
   </head>
   <body class="container px-4 mx-auto font-sans bg-slate-100">
     <main>
-      <h1 class="text-2xl font-medium text-center">
+      <h1 class="text-2xl font-medium text-center mt-4">
         Example Using the Audio Plugin
       </h1>
       <div class="mt-4 text-center">
-        <button class="btn bg-blue-600 text-white" onclick="testEcho()">
-          Play
+        <button id="playButton" class="btn bg-blue-600 text-white">Play</button>
+        <button
+          id="pauseButton"
+          class="btn bg-yellow-600 text-white"
+          onclick=""
+        >
+          Pause
         </button>
-        <button class="btn bg-yellow-600 text-white" onclick="">Pause</button>
-        <button class="btn bg-red-600 text-white" onclick="">Stop</button>
+        <button id="stopButton" class="btn bg-red-600 text-white" onclick="">
+          Stop
+        </button>
       </div>
+      <p id="error" class="text-red-500 text-center mt-4"></p>
     </main>
     <footer class="text-xs mt-4 text-center">
       <div>
@@ -44,7 +51,6 @@
         </ul>
       </div>
     </footer>
-
-    <script src="./js/example.js" type="module"></script>
+    <script src="./js/example.ts" type="module"></script>
   </body>
 </html>
