@@ -10,7 +10,8 @@
   "scripts": {
     "start": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "android": "npx cap run android && vite --host"
   },
   "dependencies": {
     "@capacitor/android": "^6.0.0",
