@@ -3,7 +3,7 @@ import AVFAudio
 import Capacitor
 
 @objc(AudioPlayerPlugin)
-public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
+public class AudioPlayerPlugin: CAPPlugin {
     let audioSession = AVAudioSession.sharedInstance()
     var audioSources: [String : AudioSource] = [:]
     var onGainsFocusCallbackIds: [String : String] = [:]
