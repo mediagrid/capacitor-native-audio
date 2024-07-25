@@ -1,12 +1,90 @@
 # @mediagrid/capacitor-native-audio
 
-Play audio in a Capacitor app natively from a URL/web source simultaneously with background audio.
+# 🚧🚧 THIS PACKAGE IS UNRELEASED 🚧🚧
+
+We are currently working on testing this package and it will be released soon.
+
+## Description
+
+Play audio in a Capacitor app natively (Android/iOS) from a URL/web source simultaneously with background audio. Also supports background/foreground playing.
 
 ## Install
 
 ```bash
-npm install @mediagrid/capacitor-native-audio
+# npm install @mediagrid/capacitor-native-audio
+npm install https://github.com/mediagrid/capacitor-native-audio#main # Until released on NPM
 npx cap sync
+```
+
+## Android
+
+### `AndroidManifest.xml` required changes
+
+Located at `android/app/src/main/AndroidManifest.xml`
+
+```xml
+<application>
+    <!-- OTHER STUFF -->
+
+    <!-- Add service to be used for background play -->
+    <service
+        android:name="us.mediagrid.capacitorjs.plugins.nativeaudio.AudioPlayerService"
+        android:description="@string/audio_player_service_description"
+        android:foregroundServiceType="mediaPlayback" />
+
+    <!-- OTHER STUFF -->
+</application>
+
+<!-- Add required permissions -->
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+<uses-permission android:name="android.permission.WAKE_LOCK" />
+```
+
+### `strings.xml` required changes
+
+Located at `android/app/src/main/res/values/strings.xml`
+
+```xml
+<resources>
+    <!-- OTHER STUFF -->
+
+    <!-- Describes the service in your app settings once installed -->
+    <string name="audio_player_service_description">Allows for audio to play in the background.</string>
+</resources>
+```
+
+### Add a notification icon
+
+This icon is used in the notification bar while audio is playing.
+
+1. Open the Android project in Android Studio
+1. Right-click on the `app/res` folder in the Project files
+1. Go to New -> Image Asset
+1. Choose "Notification Icons" under "Icon type"
+1. Make the Name `ic_stat_icon_default`
+1. Choose your icon
+1. Click Next
+
+# iOS
+
+## Enable Audio Background Mode
+
+This can be done in XCode or by editing `Info.plist` directly.
+
+```xml
+<!-- ios/App/App/Info.plist -->
+
+<dict>
+    <!-- OTHER STUFF -->
+
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>audio</string>
+    </array>
+
+    <!-- OTHER STUFF -->
+</dict>
 ```
 
 ## API
