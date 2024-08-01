@@ -205,6 +205,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         isPaused = false
         removeRemoteTransportControls()
         removeNowPlaying()
+        removeInterruptionNotifications()
     }
 
     private func createPlayerItem() throws -> AVPlayerItem {
@@ -225,6 +226,16 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         notificationCenter.addObserver(
             self,
             selector: #selector(handleInterruption),
+            name: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance()
+        )
+    }
+    
+    private func removeInterruptionNotifications() {
+        let notificationCenter = NotificationCenter.default
+        
+        notificationCenter.removeObserver(
+            self,
             name: AVAudioSession.interruptionNotification,
             object: AVAudioSession.sharedInstance()
         )
