@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.session.MediaController;
 import androidx.media3.session.SessionCommand;
 import androidx.media3.session.SessionResult;
@@ -103,6 +104,7 @@ public class AudioPlayerPlugin extends Plugin {
                     audioSource.setPlayer(audioMediaController);
 
                     audioMediaController.setMediaItem(audioSource.buildMediaItem());
+                    audioMediaController.setRepeatMode(audioSource.loopAudio ? ExoPlayer.REPEAT_MODE_ONE : ExoPlayer.REPEAT_MODE_OFF);
                     audioMediaController.setPlayWhenReady(false);
                     audioMediaController.addListener(new PlayerEventListener(this, audioSource));
 

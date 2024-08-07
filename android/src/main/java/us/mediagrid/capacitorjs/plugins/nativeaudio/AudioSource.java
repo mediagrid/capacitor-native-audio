@@ -24,6 +24,7 @@ public class AudioSource extends Binder {
     public boolean useForNotification;
     public String artworkSource;
     public boolean isBackgroundMusic;
+    public boolean loopAudio = false;
     public String onPlaybackStatusChangeCallbackId;
     public String onReadyCallbackId;
     public String onEndCallbackId;
@@ -36,7 +37,6 @@ public class AudioSource extends Binder {
 
     private boolean isPlaying = false;
     private boolean isStopped = true;
-    private boolean loopAudio = false;
 
     public AudioSource(
         AudioPlayerPlugin pluginOwner,
