@@ -12,7 +12,6 @@ export interface AudioPlayerPrepareParams extends AudioPlayerDefaultParams {
    * A URI for the audio file to play
    *
    * @example A public web source: https://example.com/example.mp3
-   * @example An in-app web source: https://localhost/example.mp3
    * @since 1.0.0
    */
   audioSource: string;
@@ -40,7 +39,7 @@ export interface AudioPlayerPrepareParams extends AudioPlayerDefaultParams {
    * A PNG is the best option with square dimensions. 1200px x 1200px is a good option.
    *
    * @example A public web source: https://example.com/artwork.png
-   * @example An in-app web source: https://localhost/artwork.png
+
    * @since 1.0.0
    */
   artworkSource?: string;
