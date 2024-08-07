@@ -6,6 +6,7 @@ export interface AudioPlayerPrepareParams extends AudioPlayerDefaultParams {
   audioSource: string;
   friendlyTitle: string;
   useForNotification: boolean;
+  artworkSource?: string;
   isBackgroundMusic?: boolean;
   loop?: boolean;
 }

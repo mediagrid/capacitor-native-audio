@@ -1,13 +1,20 @@
 package us.mediagrid.capacitorjs.plugins.nativeaudio;
 
 import android.content.Context;
-import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.ExoPlayer;
-import com.google.android.exoplayer2.MediaItem;
-import com.google.android.exoplayer2.MediaMetadata;
-import com.google.android.exoplayer2.audio.AudioAttributes;
+import android.net.Uri;
+import android.os.Binder;
+import android.os.Bundle;
 
-public class AudioSource {
+import androidx.media3.common.C;
+import androidx.media3.common.Player;
+import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.MediaMetadata;
+import androidx.media3.common.AudioAttributes;
+import androidx.media3.session.MediaController;
+import androidx.media3.session.MediaSession;
+
+public class AudioSource extends Binder {
 
     private static final String TAG = "AudioSource";
 
@@ -15,14 +22,18 @@ public class AudioSource {
     public String source;
     public String friendlyTitle;
     public boolean useForNotification;
+    public String artworkSource;
     public boolean isBackgroundMusic;
     public String onPlaybackStatusChangeCallbackId;
     public String onReadyCallbackId;
     public String onEndCallbackId;
 
-    private AudioPlayerService serviceOwner;
     private AudioPlayerPlugin pluginOwner;
+
     private ExoPlayer player;
+    private MediaController mediaController;
+    private PlayerEventListener playerEventListener;
+
     private boolean isPlaying = false;
     private boolean isStopped = true;
     private boolean loopAudio = false;
@@ -33,6 +44,7 @@ public class AudioSource {
         String source,
         String friendlyTitle,
         boolean useForNotification,
+        String artworkSource,
         boolean isBackgroundMusic,
         boolean loopAudio
     ) {
@@ -41,32 +53,32 @@ public class AudioSource {
         this.source = source;
         this.friendlyTitle = friendlyTitle;
         this.useForNotification = useForNotification;
+        this.artworkSource = artworkSource;
         this.isBackgroundMusic = isBackgroundMusic;
         this.loopAudio = loopAudio;
     }
 
     public void initialize(Context context) {
-        if (player != null) {
+        if (useForNotification || player != null) {
             return;
         }
 
-        isPlaying = false;
-        isStopped = true;
+        setIsStopped();
 
         player =
             new ExoPlayer.Builder(context)
                 .setAudioAttributes(
                     new AudioAttributes.Builder()
                         .setUsage(C.USAGE_MEDIA)
-                        .setContentType(isBackgroundMusic ? C.AUDIO_CONTENT_TYPE_SPEECH : C.AUDIO_CONTENT_TYPE_SPEECH)
+                        .setContentType(C.AUDIO_CONTENT_TYPE_SPEECH)
                         .build(),
-                    useForNotification
+                    false
                 )
                 .setWakeMode(C.WAKE_MODE_NETWORK)
                 .build();
         player.setMediaItem(buildMediaItem());
         player.setRepeatMode(loopAudio ? ExoPlayer.REPEAT_MODE_ONE : ExoPlayer.REPEAT_MODE_OFF);
-
+        player.setPlayWhenReady(false);
         player.addListener(new PlayerEventListener(pluginOwner, this));
 
         player.prepare();
@@ -75,13 +87,15 @@ public class AudioSource {
     public void changeAudioSource(String newSource) {
         source = newSource;
 
+        Player player = getPlayer();
+
         player.setMediaItem(buildMediaItem());
         player.setPlayWhenReady(false);
         player.prepare();
     }
 
     public float getDuration() {
-        long duration = player.getDuration();
+        long duration = getPlayer().getDuration();
 
         if (duration == C.TIME_UNSET) {
             return -1;
@@ -91,45 +105,44 @@ public class AudioSource {
     }
 
     public float getCurrentTime() {
-        return player.getCurrentPosition() / 1000;
+        return getPlayer().getCurrentPosition() / 1000;
     }
 
     public void play() {
-        isPlaying = true;
-        isStopped = false;
+        setIsPlaying();
+
+        Player player = getPlayer();
+
+        if (player.getPlaybackState() == Player.STATE_IDLE) {
+            player.prepare();
+        }
 
         player.play();
     }
 
     public void pause() {
-        isPlaying = false;
-        isStopped = false;
-
-        player.pause();
+        setIsPaused();
+        getPlayer().pause();
     }
 
     public void seek(long timeInSeconds) {
-        player.seekTo(timeInSeconds * 1000);
+        getPlayer().seekTo(timeInSeconds * 1000);
     }
 
     public void stop() {
-        isStopped = true;
-        isPlaying = false;
+        setIsStopped();
 
+        Player player = getPlayer();
         player.pause();
         player.seekToDefaultPosition();
     }
 
-    public void stopThroughService() {
-        serviceOwner.stop(id);
-    }
-
     public void setVolume(float volume) {
-        player.setVolume(volume);
+        getPlayer().setVolume(volume);
     }
 
     public void setRate(float rate) {
-        player.setPlaybackSpeed(rate);
+        getPlayer().setPlaybackSpeed(rate);
     }
 
     public void setOnReady(String callbackId) {
@@ -145,48 +158,90 @@ public class AudioSource {
     }
 
     public boolean isPlaying() {
-        if (player == null) {
+        if (getPlayer() == null) {
             return false;
         }
 
         return isPlaying;
     }
 
+    public boolean isPaused() {
+        return !isPlaying && !isStopped;
+    }
+
     public boolean isStopped() {
         return isStopped;
     }
 
-    public void setIsPlaying(boolean isPlaying) {
-        this.isPlaying = isPlaying;
+    public void setIsPlaying() {
+        this.isStopped = false;
+        this.isPlaying = true;
     }
 
-    public void setIsStopped(boolean isStopped) {
-        this.isStopped = isStopped;
+    public void setIsPaused() {
+        this.isStopped = false;
+        this.isPlaying = false;
     }
 
-    public void setServiceOwner(AudioPlayerService service) {
-        this.serviceOwner = service;
+    public void setIsStopped() {
+        this.isStopped = true;
+        this.isPlaying = false;
     }
 
-    public ExoPlayer getPlayer() {
+    public Player getPlayer() {
+        if (useForNotification) {
+            return mediaController;
+        }
+
         return player;
     }
 
-    public void releasePlayer() {
-        if (isInitialized()) {
-            player.release();
-            player = null;
+    public void setPlayer(Player player) {
+        if (useForNotification) {
+            mediaController = (MediaController) player;
+        } else {
+            this.player = (ExoPlayer) player;
         }
     }
 
-    public boolean isInitialized() {
-        return player != null;
+    public void releasePlayer() {
+        if (player != null) {
+            player.release();
+            player = null;
+            playerEventListener = null;
+        }
     }
 
-    private MediaItem buildMediaItem() {
+    public void setEventListener(PlayerEventListener listener) {
+        playerEventListener = listener;
+    }
+
+    public PlayerEventListener getEventListener() {
+        return playerEventListener;
+    }
+
+    public boolean isInitialized() {
+        return getPlayer() != null;
+    }
+
+    public MediaItem buildMediaItem() {
         return new MediaItem.Builder()
-            .setMediaMetadata(new MediaMetadata.Builder().setArtist("").setTitle(friendlyTitle).build())
+            .setMediaMetadata(
+                new MediaMetadata.Builder()
+                    .setArtist("")
+                    .setTitle(friendlyTitle)
+                    .setArtworkUri(getArtworkUri())
+                    .build()
+            )
             .setUri(source)
             .build();
+    }
+
+    private Uri getArtworkUri() {
+        if (!useForNotification || artworkSource == null) {
+            return null;
+        }
+
+        return Uri.parse(artworkSource);
     }
 }

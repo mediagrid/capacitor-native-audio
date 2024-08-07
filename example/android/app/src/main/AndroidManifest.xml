@@ -27,7 +27,12 @@
         <service
             android:name="us.mediagrid.capacitorjs.plugins.nativeaudio.AudioPlayerService"
             android:description="@string/audio_player_service_description"
-            android:foregroundServiceType="mediaPlayback" />
+            android:foregroundServiceType="mediaPlayback"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService"/>
+            </intent-filter>
+        </service>
 
         <provider
             android:name="androidx.core.content.FileProvider"

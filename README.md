@@ -385,6 +385,7 @@ onPlaybackStatusChange(params: AudioPlayerListenerParams, callback: (result: { s
 | **`audioSource`**        | <code>string</code>  |
 | **`friendlyTitle`**      | <code>string</code>  |
 | **`useForNotification`** | <code>boolean</code> |
+| **`artworkSource`**      | <code>string</code>  |
 | **`isBackgroundMusic`**  | <code>boolean</code> |
 | **`loop`**               | <code>boolean</code> |
 
