@@ -4,30 +4,38 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
+
+import androidx.media3.session.MediaController;
+import androidx.media3.session.SessionCommand;
+import androidx.media3.session.SessionResult;
+import androidx.media3.session.SessionToken;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.HashMap;
 
-import us.mediagrid.capacitorjs.plugins.nativeaudio.AudioPlayerService.AudioPlayerServiceBinder;
+import us.mediagrid.capacitorjs.plugins.nativeaudio.exceptions.DestroyNotAllowedException;
 
 @CapacitorPlugin(name = "AudioPlayer")
 public class AudioPlayerPlugin extends Plugin {
 
     private static final String TAG = "AudioPlayerPlugin";
 
-    private AudioPlayerService audioPlayerService;
+    private ListenableFuture<MediaController> audioMediaControllerFuture;
+    private MediaController audioMediaController;
+
+    private AudioSources audioSources = new AudioSources();
     private HashMap<String, String> appOnStartCallbackIds = new HashMap<>();
     private HashMap<String, String> appOnStopCallbackIds = new HashMap<>();
 
@@ -38,7 +46,6 @@ public class AudioPlayerPlugin extends Plugin {
         super.load();
 
         createNotificationChannel();
-        initializePlugin();
     }
 
     @PluginMethod
@@ -46,16 +53,9 @@ public class AudioPlayerPlugin extends Plugin {
         try {
             String sourceId = audioId(call);
 
-            if (audioPlayerService == null) {
-                Log.e(TAG, "audioPlayerService is null");
-                call.reject("There was an issue creating the audio player (1).");
-
-                return;
-            }
-
-            if (audioPlayerService.audioSourceExists(sourceId)) {
-                Log.w(TAG, String.format("An audio source with the ID %s already exists.", audioId(call)));
-                call.reject("There was an issue creating the audio player (2).");
+            if (audioSourceExists("create", call, false)) {
+                Log.w(TAG, String.format("An audio source with the ID %s already exists.", sourceId));
+                call.reject("There was an issue creating the audio player [0].");
 
                 return;
             }
@@ -66,23 +66,26 @@ public class AudioPlayerPlugin extends Plugin {
                 call.getString("audioSource"),
                 call.getString("friendlyTitle"),
                 call.getBoolean("useForNotification", false),
+                call.getString("artworkSource"),
                 call.getBoolean("isBackgroundMusic", false),
                 call.getBoolean("loop", false)
             );
 
-            new Handler(Looper.getMainLooper())
-                .post(
-                    () -> {
-                        try {
-                            audioPlayerService.createAudioSource(audioSource);
-                            call.resolve();
-                        } catch (Exception ex) {
-                            call.reject("There was an issue creating the audio player (3).", ex);
-                        }
-                    }
-                );
+            if (audioSources.count() == 0 && !audioSource.useForNotification) {
+                throw new RuntimeException("An audio source with useForNotification = true must exist first.");
+            }
+
+            if (audioSources.hasNotification() && audioSource.useForNotification) {
+                throw new RuntimeException("An audio source with useForNotification = true already exists. There can only be one.");
+            }
+
+            audioSources.add(audioSource);
+
+            initializeMediaController("create", call, () -> {
+                call.resolve();
+            });
         } catch (Exception ex) {
-            call.reject("There was an issue creating the audio player (4).", ex);
+            call.reject("There was an issue creating the audio player.", ex);
         }
     }
 
@@ -93,19 +96,73 @@ public class AudioPlayerPlugin extends Plugin {
                 return;
             }
 
-            new Handler(Looper.getMainLooper())
-                .post(
-                    () -> {
+            postToLooper("initialize", call, () -> {
+                AudioSource audioSource = audioSources.get(audioId(call));
+
+                if (audioSource.useForNotification) {
+                    audioSource.setPlayer(audioMediaController);
+
+                    audioMediaController.setMediaItem(audioSource.buildMediaItem());
+                    audioMediaController.setPlayWhenReady(false);
+                    audioMediaController.addListener(new PlayerEventListener(this, audioSource));
+
+                    audioMediaController.prepare();
+
+                    Bundle audioSourceBundles = new Bundle();
+                    audioSourceBundles.putBinder("audioSources", audioSources);
+
+                    ListenableFuture<SessionResult> commandResult = audioMediaController.sendCustomCommand(
+                        new SessionCommand(MediaSessionCallback.SET_AUDIO_SOURCES, audioSourceBundles),
+                        new Bundle()
+                    );
+
+                    commandResult.addListener(() -> {
                         try {
-                            audioPlayerService.initializeAudioSource(audioId(call));
-                            call.resolve();
+                            SessionResult result = commandResult.get();
+
+                            if (result.resultCode == SessionResult.RESULT_SUCCESS) {
+                                call.resolve();
+                            } else {
+                                Log.e(TAG, String.format("Couldn't set audio sources on MediaSession. Result code was %s.", result.resultCode));
+                                call.reject("There was an issue initializing the audio player [1].");
+                            }
                         } catch (Exception ex) {
-                            call.reject("There was an issue initializing the audio player (1).", ex);
+                            Log.e(TAG, "Couldn't set audio sources on MediaSession.", ex);
+                            call.reject("There was an issue initializing the audio player [2].", ex);
                         }
-                    }
-                );
+                    }, MoreExecutors.directExecutor());
+                } else {
+                    Bundle audioSourceBundle = new Bundle();
+                    audioSourceBundle.putBinder("audioSource", audioSource);
+
+                    ListenableFuture<SessionResult> commandResult = audioMediaController.sendCustomCommand(
+                        new SessionCommand(MediaSessionCallback.CREATE_PLAYER, audioSourceBundle),
+                        new Bundle()
+                    );
+
+                    commandResult.addListener(() -> {
+                        try {
+                            SessionResult result = commandResult.get();
+
+                            if (result.resultCode == SessionResult.RESULT_SUCCESS) {
+                                call.resolve();
+                            } else {
+                                Log.e(TAG, String.format(
+                                    "Couldn't create player for Audio Id %s. Result code was %s",
+                                    audioSource.id,
+                                    result.resultCode)
+                                );
+                                call.reject("There was an issue initializing the audio player [3].");
+                            }
+                        } catch (Exception ex) {
+                            Log.e(TAG, String.format("Couldn't create player for Audio Id %s", audioSource.id), ex);
+                            call.reject("There was an issue initializing the audio player [4].", ex);
+                        }
+                    }, MoreExecutors.directExecutor());
+                }
+            });
         } catch (Exception ex) {
-            call.reject("There was an issue initializing the audio player (2).", ex);
+            call.reject("There was an issue initializing the audio player [5].", ex);
         }
     }
 
@@ -116,19 +173,15 @@ public class AudioPlayerPlugin extends Plugin {
                 return;
             }
 
-            new Handler(Looper.getMainLooper())
-                .post(
-                    () -> {
-                        try {
-                            audioPlayerService.changeAudioSource(audioId(call), call.getString("source"));
-                            call.resolve();
-                        } catch (Exception ex) {
-                            call.reject("There was an issue changing the audio source (1).", ex);
-                        }
-                    }
-                );
+            AudioSource audioSource = audioSources.get(audioId(call));
+
+            postToLooper("changeAudioSource", call, () -> {
+                audioSource.changeAudioSource(call.getString("source"));
+
+                call.resolve();
+            });
         } catch (Exception ex) {
-            call.reject("There was an issue changing the audio source (2).", ex);
+            call.reject("There was an issue changing the audio source.", ex);
         }
     }
 
@@ -139,20 +192,14 @@ public class AudioPlayerPlugin extends Plugin {
                 return;
             }
 
-            new Handler(Looper.getMainLooper())
-                .post(
-                    () -> {
-                        try {
-                            float duration = audioPlayerService.getDuration(audioId(call));
-
-                            call.resolve(new JSObject().put("duration", duration));
-                        } catch (Exception ex) {
-                            call.reject("There was an issue getting the duration for the audio source (1).", ex);
-                        }
-                    }
-                );
+            postToLooper("getDuration", call, () -> {
+                call.resolve(new JSObject().put(
+                    "duration",
+                    audioSources.get(audioId(call)).getDuration()
+                ));
+            });
         } catch (Exception ex) {
-            call.reject("There was an issue getting the duration for the audio source (2).", ex);
+            call.reject("There was an issue getting the duration for the audio source.", ex);
         }
     }
 
@@ -163,20 +210,14 @@ public class AudioPlayerPlugin extends Plugin {
                 return;
             }
 
-            new Handler(Looper.getMainLooper())
-                .post(
-                    () -> {
-                        try {
-                            float currentTime = audioPlayerService.getCurrentTime(audioId(call));
-
-                            call.resolve(new JSObject().put("currentTime", currentTime));
-                        } catch (Exception ex) {
-                            call.reject("There was an issue getting the current time for the audio source (1).", ex);
-                        }
-                    }
-                );
+            postToLooper("getCurrentTime", call, () -> {
+                call.resolve(new JSObject().put(
+                    "currentTime",
+                    audioSources.get(audioId(call)).getCurrentTime()
+                ));
+            });
         } catch (Exception ex) {
-            call.reject("There was an issue getting the current time for the audio source (2).", ex);
+            call.reject("There was an issue getting the current time for the audio source.", ex);
         }
     }
 
@@ -187,28 +228,13 @@ public class AudioPlayerPlugin extends Plugin {
                 return;
             }
 
-            if (!audioPlayerService.isRunning()) {
-                Log.i(TAG, String.format("Play for audio source ID %s is starting service", audioId(call)));
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                    getContextForAudioService().startService(AudioPlayerService.newIntent(getContextForAudioService()));
-                } else {
-                    getContextForAudioService().startForegroundService(AudioPlayerService.newIntent(getContextForAudioService()));
-                }
-            }
+            postToLooper("play", call, () -> {
+                audioSources.get(audioId(call)).play();
 
-            new Handler(Looper.getMainLooper())
-                .post(
-                    () -> {
-                        try {
-                            audioPlayerService.play(audioId(call));
-                            call.resolve();
-                        } catch (Exception ex) {
-                            call.reject("There was an issue playing the audio (1).", ex);
-                        }
-                    }
-                );
+                call.resolve();
+            });
         } catch (Exception ex) {
-            call.reject("There was an issue playing the audio (2).", ex);
+            call.reject("There was an issue playing the audio.", ex);
         }
     }
 
@@ -219,19 +245,13 @@ public class AudioPlayerPlugin extends Plugin {
                 return;
             }
 
-            new Handler(Looper.getMainLooper())
-                .post(
-                    () -> {
-                        try {
-                            audioPlayerService.pause(audioId(call));
-                            call.resolve();
-                        } catch (Exception ex) {
-                            call.reject("There was an issue pausing the audio (1).", ex);
-                        }
-                    }
-                );
+            postToLooper("pause", call, () -> {
+                audioSources.get(audioId(call)).pause();
+
+                call.resolve();
+            });
         } catch (Exception ex) {
-            call.reject("There was an issue pausing the audio (2).", ex);
+            call.reject("There was an issue pausing the audio.", ex);
         }
     }
 
@@ -242,19 +262,13 @@ public class AudioPlayerPlugin extends Plugin {
                 return;
             }
 
-            new Handler(Looper.getMainLooper())
-                .post(
-                    () -> {
-                        try {
-                            audioPlayerService.seek(audioId(call), call.getInt("timeInSeconds"));
-                            call.resolve();
-                        } catch (Exception ex) {
-                            call.reject("There was an issue seeking the audio (2).", ex);
-                        }
-                    }
-                );
+            postToLooper("seek", call, () -> {
+                audioSources.get(audioId(call)).seek(call.getInt("timeInSeconds"));
+
+                call.resolve();
+            });
         } catch (Exception ex) {
-            call.reject("There was an issue seeking the audio (2).", ex);
+            call.reject("There was an issue seeking the audio.", ex);
         }
     }
 
@@ -265,19 +279,13 @@ public class AudioPlayerPlugin extends Plugin {
                 return;
             }
 
-            new Handler(Looper.getMainLooper())
-                .post(
-                    () -> {
-                        try {
-                            audioPlayerService.stop(audioId(call));
-                            call.resolve();
-                        } catch (Exception ex) {
-                            call.reject("There was an issue stopping the audio (1).", ex);
-                        }
-                    }
-                );
+            postToLooper("stop", call, () -> {
+                audioSources.get(audioId(call)).stop();
+
+                call.resolve();
+            });
         } catch (Exception ex) {
-            call.reject("There was an issue stopping the audio (2).", ex);
+            call.reject("There was an issue stopping the audio.", ex);
         }
     }
 
@@ -285,24 +293,16 @@ public class AudioPlayerPlugin extends Plugin {
     public void setVolume(PluginCall call) {
         try {
             if (!audioSourceExists("setVolume", call)) {
-                Log.i(TAG, "No audio source");
-                Log.i(TAG, audioId(call));
                 return;
             }
 
-            new Handler(Looper.getMainLooper())
-                .post(
-                    () -> {
-                        try {
-                            audioPlayerService.setVolume(audioId(call), call.getFloat("volume"));
-                            call.resolve();
-                        } catch (Exception ex) {
-                            call.reject("There was an issue setting the audio volume (1).", ex);
-                        }
-                    }
-                );
+            postToLooper("setVolume", call, () -> {
+                audioSources.get(audioId(call)).setVolume(call.getFloat("volume"));
+
+                call.resolve();
+            });
         } catch (Exception ex) {
-            call.reject("There was an issue setting the audio volume (2).", ex);
+            call.reject("There was an issue setting the audio volume.", ex);
         }
     }
 
@@ -313,19 +313,13 @@ public class AudioPlayerPlugin extends Plugin {
                 return;
             }
 
-            new Handler(Looper.getMainLooper())
-                .post(
-                    () -> {
-                        try {
-                            audioPlayerService.setRate(audioId(call), call.getFloat("rate"));
-                            call.resolve();
-                        } catch (Exception ex) {
-                            call.reject("There was an issue setting the rate of the audio (1).", ex);
-                        }
-                    }
-                );
+            postToLooper("setRate", call, () -> {
+                audioSources.get(audioId(call)).setRate(call.getFloat("rate"));
+
+                call.resolve();
+            });
         } catch (Exception ex) {
-            call.reject("There was an issue setting the rate of the audio (2).", ex);
+            call.reject("There was an issue setting the rate of the audio.", ex);
         }
     }
 
@@ -336,48 +330,47 @@ public class AudioPlayerPlugin extends Plugin {
                 return;
             }
 
-            new Handler(Looper.getMainLooper())
-                .post(
-                    () -> {
-                        try {
-                            boolean isPlaying = audioPlayerService.isPlaying(audioId(call));
-
-                            call.resolve(new JSObject().put("isPlaying", isPlaying));
-                        } catch (Exception ex) {
-                            call.reject("There was an issue getting the playing status of the audio (1).", ex);
-                        }
-                    }
-                );
+            postToLooper("isPlaying", call, () -> {
+                call.resolve(new JSObject().put(
+                    "isPlaying",
+                    audioSources.get(audioId(call)).isPlaying()
+                ));
+            });
         } catch (Exception ex) {
-            call.reject("There was an issue getting the playing status of the audio (2).", ex);
+            call.reject("There was an issue getting the playing status of the audio.", ex);
         }
     }
 
     @PluginMethod
     public void destroy(PluginCall call) {
         try {
-            String audioId = audioId(call);
-
-            appOnStartCallbackIds.remove(audioId);
-            appOnStopCallbackIds.remove(audioId);
-
             if (!audioSourceExists("destroy", call)) {
                 return;
             }
 
-            new Handler(Looper.getMainLooper())
-                .post(
-                    () -> {
-                        try {
-                            audioPlayerService.destroyAudioSource(audioId);
-                            call.resolve();
-                        } catch (Exception ex) {
-                            call.reject("There was an issue cleaning up the audio player (1).", ex);
-                        }
-                    }
-                );
+            String audioId = audioId(call);
+            AudioSource audioSource = audioSources.get(audioId);
+
+            if (audioSource.useForNotification && audioSources.count() > 1) {
+                throw new DestroyNotAllowedException(String.format("Audio source ID %s is the current notification and cannot be destroyed. Destroy other audio sources first.", audioId));
+            }
+
+            appOnStartCallbackIds.remove(audioId);
+            appOnStopCallbackIds.remove(audioId);
+
+            postToLooper("destroy", call, () -> {
+                if (audioSource.useForNotification) {
+                    releaseMediaController();
+                } else {
+                    audioSource.releasePlayer();
+                }
+
+                audioSources.remove(audioId);
+
+                call.resolve();
+            });
         } catch (Exception ex) {
-            call.reject("There was an issue cleaning up the audio player (2).", ex);
+            call.reject("There was an issue cleaning up the audio player.", ex);
         }
     }
 
@@ -406,7 +399,7 @@ public class AudioPlayerPlugin extends Plugin {
         call.setKeepAlive(true);
         getBridge().saveCall(call);
 
-        audioPlayerService.setOnAudioReady(audioId(call), call.getCallbackId());
+        audioSources.get(audioId(call)).setOnReady(call.getCallbackId());
     }
 
     @PluginMethod(returnType = PluginMethod.RETURN_CALLBACK)
@@ -418,7 +411,7 @@ public class AudioPlayerPlugin extends Plugin {
         call.setKeepAlive(true);
         getBridge().saveCall(call);
 
-        audioPlayerService.setOnAudioEnd(audioId(call), call.getCallbackId());
+        audioSources.get(audioId(call)).setOnEnd(call.getCallbackId());
     }
 
     @PluginMethod(returnType = PluginMethod.RETURN_CALLBACK)
@@ -430,7 +423,7 @@ public class AudioPlayerPlugin extends Plugin {
         call.setKeepAlive(true);
         getBridge().saveCall(call);
 
-        audioPlayerService.setOnPlaybackStatusChange(audioId(call), call.getCallbackId());
+        audioSources.get(audioId(call)).setOnPlaybackStatusChange(call.getCallbackId());
     }
 
     @Override
@@ -439,7 +432,6 @@ public class AudioPlayerPlugin extends Plugin {
 
         super.handleOnStart();
 
-        initializePlugin();
         makeAppStatusChangeCallbacks(appOnStartCallbackIds);
     }
 
@@ -454,48 +446,64 @@ public class AudioPlayerPlugin extends Plugin {
 
     @Override
     protected void handleOnDestroy() {
-        getContextForAudioService().stopService(AudioPlayerService.newIntent(getContextForAudioService()));
-        unbindAudioService();
+        Log.i(TAG, "Handling onDestroy");
+
+        releaseMediaController();
 
         super.handleOnDestroy();
     }
 
-    private void initializePlugin() {
-        bindAudioService();
-    }
+    private void initializeMediaController(String methodName, PluginCall call, Runnable callback) {
+        Log.i(TAG, "Initializing MediaController");
 
-    private void bindAudioService() {
-        if (audioPlayerService != null) {
+        if (audioMediaController != null) {
+            Log.i(TAG, "MediaController already initialized, running callback.");
+            callback.run();
+
             return;
         }
 
-        Intent intent = AudioPlayerService.newIntent(getContextForAudioService());
-        getContextForAudioService().bindService(intent, connection, Context.BIND_AUTO_CREATE);
+        postToLooper("initializeMediaController", call, () -> {
+            SessionToken sessionToken = new SessionToken(getContextForAudioService(), new ComponentName(getContextForAudioService(), AudioPlayerService.class));
+
+            audioMediaControllerFuture = new MediaController.Builder(
+                getContextForAudioService(),
+                sessionToken
+            ).buildAsync();
+
+            audioMediaControllerFuture.addListener(() -> {
+                try {
+                    audioMediaController = audioMediaControllerFuture.get();
+                    callback.run();
+                } catch (Exception ex) {
+                    Log.e(TAG, "Couldn't get MediaController", ex);
+                    call.reject(
+                        String.format("There was an issue initializing the MediaController in method %s", methodName),
+                        ex
+                    );
+                }
+            }, MoreExecutors.directExecutor());
+        });
     }
 
-    private void unbindAudioService() {
-        if (audioPlayerService == null) {
+    private void releaseMediaController() {
+        if (audioMediaController == null) {
             return;
         }
 
-        getContextForAudioService().unbindService(connection);
-        audioPlayerService = null;
+        Log.i(TAG, "Releasing MediaController");
+
+        AudioSource audioSourceForNotification = audioSources.forNotification();
+
+        if (audioSourceForNotification != null && audioSourceForNotification.getEventListener() != null) {
+            audioMediaController.removeListener(audioSourceForNotification.getEventListener());
+        }
+
+        audioMediaController.stop();
+        audioMediaController.release();
+        MediaController.releaseFuture(audioMediaControllerFuture);
+        audioMediaController = null;
     }
-
-    private ServiceConnection connection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.i(TAG, "Service connected");
-            AudioPlayerServiceBinder binder = (AudioPlayerServiceBinder) service;
-            audioPlayerService = binder.getService();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.i(TAG, "Service disconnected");
-            audioPlayerService = null;
-        }
-    };
 
     private String audioId(PluginCall call) {
         return call.getString("audioId");
@@ -506,14 +514,7 @@ public class AudioPlayerPlugin extends Plugin {
     }
 
     private boolean audioSourceExists(String methodName, PluginCall call, boolean rejectIfError) {
-        if (audioPlayerService == null) {
-            Log.e(TAG, "audioPlayerService is null");
-            call.reject(String.format("There was an issue trying to play the audio (%s [1])", methodName));
-
-            return false;
-        }
-
-        boolean audioSourceExists = audioPlayerService.audioSourceExists(audioId(call));
+        boolean audioSourceExists = audioSources.exists(audioId(call));
 
         if (!audioSourceExists && rejectIfError) {
             Log.w(TAG, String.format("Audio source with ID %s was not found.", audioId(call)));
@@ -524,20 +525,24 @@ public class AudioPlayerPlugin extends Plugin {
     }
 
     private Context getContextForAudioService() {
-        return this.getActivity().getApplicationContext();
+        return this.getActivity();
     }
 
     private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel playbackChannel = new NotificationChannel(
-                AudioPlayerService.PLAYBACK_CHANNEL_ID,
-                "Audio playback",
-                NotificationManager.IMPORTANCE_LOW
-            );
-
-            NotificationManager manager = getContext().getSystemService(NotificationManager.class);
-            manager.createNotificationChannel(playbackChannel);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O
+            || getContext().getSystemService(NotificationManager.class).getNotificationChannel(AudioPlayerService.PLAYBACK_CHANNEL_ID) != null) {
+            return;
         }
+
+        NotificationManager manager = getContext().getSystemService(NotificationManager.class);
+
+        NotificationChannel playbackChannel = new NotificationChannel(
+            AudioPlayerService.PLAYBACK_CHANNEL_ID,
+            "Audio playback",
+            NotificationManager.IMPORTANCE_LOW
+        );
+
+        manager.createNotificationChannel(playbackChannel);
     }
 
     private void makeAppStatusChangeCallbacks(HashMap<String, String> callbackIds) {
@@ -550,5 +555,20 @@ public class AudioPlayerPlugin extends Plugin {
 
             call.resolve();
         }
+    }
+
+    private void postToLooper(String methodName, PluginCall call, Runnable callback) {
+        new Handler(Looper.getMainLooper()).post(
+            () -> {
+                try {
+                    callback.run();
+                } catch (Exception ex) {
+                    call.reject(
+                        String.format("There was an issue posting to the looper for method %s", methodName),
+                        ex
+                    );
+                }
+            }
+        );
     }
 }

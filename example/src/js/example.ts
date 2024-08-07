@@ -2,9 +2,11 @@ import { CapacitorException } from '@capacitor/core';
 import { AudioPlayer } from '@mediagrid/capacitor-native-audio';
 import mainAudio from '../assets/karen_the_news_update.mp3';
 import backgroundAudio from '../assets/komiku_bicycle.mp3';
+import artwork from '../assets/sample_artwork.png';
 
 const mainAudioHref = new URL(mainAudio, import.meta.url).href;
 const bgAudioHref = new URL(backgroundAudio, import.meta.url).href;
+const artworkHref = new URL(artwork, import.meta.url).href;
 
 const audioId = generateAudioId();
 const bgAudioId = generateAudioId();
@@ -21,6 +23,7 @@ async function initialize(): Promise<void> {
     audioSource: mainAudioHref,
     friendlyTitle: 'My Test Audio',
     useForNotification: true,
+    artworkSource: artworkHref,
     isBackgroundMusic: false,
     loop: false,
   }).catch(ex => setError(ex));
@@ -34,13 +37,18 @@ async function initialize(): Promise<void> {
     loop: true,
   }).catch(ex => setError(ex));
 
-  AudioPlayer.onAudioReady({ audioId: audioId }, async () => {
+  await AudioPlayer.onAudioReady({ audioId: audioId }, async () => {
     setText(
       'duration',
       Math.ceil(
         (await AudioPlayer.getDuration({ audioId: audioId })).duration,
       ).toString(),
     );
+  });
+
+  AudioPlayer.onAudioEnd({ audioId: audioId }, async () => {
+    stopCurrentPositionUpdate(true);
+    AudioPlayer.stop({ audioId: bgAudioId });
   });
 
   AudioPlayer.onPlaybackStatusChange({ audioId: audioId }, result => {
@@ -50,9 +58,11 @@ async function initialize(): Promise<void> {
       case 'playing':
         AudioPlayer.setVolume({ audioId: bgAudioId, volume: 0.5 });
         AudioPlayer.play({ audioId: bgAudioId });
+        startCurrentPositionUpdate();
         break;
       case 'paused':
         AudioPlayer.pause({ audioId: bgAudioId });
+        stopCurrentPositionUpdate();
         break;
       case 'stopped':
         AudioPlayer.stop({ audioId: bgAudioId });
@@ -85,6 +95,7 @@ addClickEvent('pauseButton', () => {
 });
 
 addClickEvent('stopButton', () => {
+  setText('status', 'stopped');
   stopCurrentPositionUpdate(true);
   AudioPlayer.stop({ audioId });
 });
@@ -101,6 +112,8 @@ addClickEvent('cleanupButton', async () => {
 let currentPositionIntervalId = 0;
 
 function startCurrentPositionUpdate(): void {
+  stopCurrentPositionUpdate();
+
   currentPositionIntervalId = window.setInterval(async () => {
     setText(
       'currentTime',

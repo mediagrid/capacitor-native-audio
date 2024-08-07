@@ -1,11 +1,15 @@
 package us.mediagrid.capacitorjs.plugins.nativeaudio;
 
+import static androidx.media3.common.Player.*;
+
 import android.util.Log;
+
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PluginCall;
-import com.google.android.exoplayer2.Player;
 
-public class PlayerEventListener implements Player.Listener {
+import androidx.media3.common.Player;
+
+public class PlayerEventListener implements Listener {
 
     private static final String TAG = "PlayerEventListener";
 
@@ -15,6 +19,7 @@ public class PlayerEventListener implements Player.Listener {
     public PlayerEventListener(AudioPlayerPlugin plugin, AudioSource audioSource) {
         this.plugin = plugin;
         this.audioSource = audioSource;
+        this.audioSource.setEventListener(this);
     }
 
     @Override
@@ -23,16 +28,15 @@ public class PlayerEventListener implements Player.Listener {
 
         if (audioSource.isInitialized()) {
             if (
-                audioSource.getPlayer().getPlaybackState() == Player.STATE_READY &&
-                !audioSource.getPlayer().getPlayWhenReady() &&
-                !audioSource.isStopped()
+                audioSource.getPlayer().getPlaybackState() == STATE_READY &&
+                    !audioSource.getPlayer().getPlayWhenReady() &&
+                    !audioSource.isStopped()
             ) {
                 status = "paused";
-                audioSource.setIsPlaying(false);
+                audioSource.setIsPaused();
             } else if (isPlaying || audioSource.isPlaying()) {
                 status = "playing";
-                audioSource.setIsPlaying(true);
-                audioSource.setIsStopped(false);
+                audioSource.setIsPlaying();
             }
         }
 
@@ -40,13 +44,15 @@ public class PlayerEventListener implements Player.Listener {
     }
 
     @Override
-    public void onPlaybackStateChanged(int playbackState) {
-        if (playbackState == Player.STATE_READY) {
+    public void onPlaybackStateChanged(@State int playbackState) {
+        if (playbackState == STATE_READY) {
             makeCall(audioSource.onReadyCallbackId);
         }
 
-        if (playbackState == Player.STATE_ENDED) {
-            audioSource.stopThroughService();
+        if (playbackState == STATE_ENDED) {
+            audioSource.getPlayer().stop();
+            audioSource.getPlayer().seekToDefaultPosition();
+            audioSource.setIsStopped();
 
             makeCall(audioSource.onEndCallbackId);
         }
