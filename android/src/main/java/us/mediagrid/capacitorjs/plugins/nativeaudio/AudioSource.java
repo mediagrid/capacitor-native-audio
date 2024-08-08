@@ -3,7 +3,7 @@ package us.mediagrid.capacitorjs.plugins.nativeaudio;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Binder;
-import android.os.Bundle;
+import android.util.Log;
 
 import androidx.media3.common.C;
 import androidx.media3.common.Player;
@@ -12,7 +12,9 @@ import androidx.media3.common.MediaItem;
 import androidx.media3.common.MediaMetadata;
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.session.MediaController;
-import androidx.media3.session.MediaSession;
+
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 
 public class AudioSource extends Binder {
 
@@ -226,22 +228,41 @@ public class AudioSource extends Binder {
 
     public MediaItem buildMediaItem() {
         return new MediaItem.Builder()
-            .setMediaMetadata(
-                new MediaMetadata.Builder()
-                    .setArtist("")
-                    .setTitle(friendlyTitle)
-                    .setArtworkUri(getArtworkUri())
-                    .build()
-            )
+            .setMediaMetadata(getMediaMetadata())
             .setUri(source)
             .build();
     }
 
-    private Uri getArtworkUri() {
-        if (!useForNotification || artworkSource == null) {
-            return null;
+    private MediaMetadata getMediaMetadata() {
+        MediaMetadata.Builder builder = new MediaMetadata.Builder()
+            .setArtist("")
+            .setTitle(friendlyTitle);
+
+        if (useForNotification && artworkSource != null) {
+            try {
+                if (artworkSource.startsWith("https:")) {
+                    builder.setArtworkUri(Uri.parse(artworkSource));
+                } else {
+                    int bufferLength = 4 * 0x400; // 4KB
+                    byte[] buffer = new byte[bufferLength];
+                    int readLength;
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+                    InputStream inputStream = pluginOwner.getContext().getAssets().open("public/" + artworkSource);
+
+                    while ((readLength = inputStream.read(buffer, 0, bufferLength)) != -1) {
+                        outputStream.write(buffer, 0, readLength);
+                    }
+
+                    inputStream.close();
+
+                    builder.maybeSetArtworkData(outputStream.toByteArray(), MediaMetadata.PICTURE_TYPE_OTHER);
+                }
+            } catch (Exception ex) {
+                Log.w(TAG, "Could not load the artwork source.", ex);
+            }
         }
 
-        return Uri.parse(artworkSource);
+        return builder.build();
     }
 }

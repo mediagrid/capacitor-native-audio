@@ -36,10 +36,15 @@ export interface AudioPlayerPrepareParams extends AudioPlayerDefaultParams {
   /**
    * A URI for the album art image to display on the Android notification. Has no affect on iOS.
    *
+   * Can also be an in-app source. Pulls from `android/app/src/assets/public`.
+   * If using [Vite](https://vitejs.dev/guide/assets.html#the-public-directory),
+   * you would put the image in your `public` folder and the build process will copy to `dist`
+   * which in turn will be copied to the Android assets by Capacitor.
+   *
    * A PNG is the best option with square dimensions. 1200px x 1200px is a good option.
    *
    * @example A public web source: https://example.com/artwork.png
-
+   * @example An in-app source: images/artwork.png
    * @since 1.0.0
    */
   artworkSource?: string;

@@ -1,12 +1,11 @@
 import { CapacitorException } from '@capacitor/core';
 import { AudioPlayer } from '@mediagrid/capacitor-native-audio';
-import mainAudio from '../assets/karen_the_news_update.mp3';
-import backgroundAudio from '../assets/komiku_bicycle.mp3';
-import artwork from '../assets/sample_artwork.png';
 
-const mainAudioHref = new URL(mainAudio, import.meta.url).href;
-const bgAudioHref = new URL(backgroundAudio, import.meta.url).href;
-const artworkHref = new URL(artwork, import.meta.url).href;
+const mainAudioHref = new URL(
+  '/assets/karen_the_news_update.mp3',
+  import.meta.url,
+).href;
+const bgAudioHref = new URL('/assets/komiku_bicycle.mp3', import.meta.url).href;
 
 const audioId = generateAudioId();
 const bgAudioId = generateAudioId();
@@ -23,7 +22,7 @@ async function initialize(): Promise<void> {
     audioSource: mainAudioHref,
     friendlyTitle: 'My Test Audio',
     useForNotification: true,
-    artworkSource: artworkHref,
+    artworkSource: 'assets/sample_artwork.png',
     isBackgroundMusic: false,
     loop: false,
   }).catch(ex => setError(ex));
