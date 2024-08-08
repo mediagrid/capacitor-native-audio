@@ -11,8 +11,7 @@ Play audio in a Capacitor app natively (Android/iOS) from a URL/web source simul
 ## Install
 
 ```bash
-# npm install @mediagrid/capacitor-native-audio
-npm install https://github.com/mediagrid/capacitor-native-audio#semver:^0.0.1 # Until released on NPM
+npm install @mediagrid/capacitor-native-audio
 npx cap sync
 ```
 
