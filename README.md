@@ -1,12 +1,8 @@
 # @mediagrid/capacitor-native-audio
 
-# 🚧🚧 THIS PACKAGE IS UNRELEASED 🚧🚧
-
-We are currently working on testing this package and it will be released soon.
-
 ## Description
 
-Play audio in a Capacitor app natively (Android/iOS) from a URL/web source simultaneously with background audio. Also supports background/foreground playing.
+Play audio in a Capacitor app natively (Android/iOS) from a URL/web source simultaneously with background audio. Also supports background playing with an OS notification.
 
 ## Install
 
