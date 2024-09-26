@@ -5,7 +5,7 @@ import Foundation
 @objc(AudioPlayerPlugin)
 public class AudioPlayerPlugin: CAPPlugin {
     let audioSession = AVAudioSession.sharedInstance()
-    var audioSources: [String: AudioSource] = [:]
+    var audioSources = AudioSources()
     var onGainsFocusCallbackIds: [String: String] = [:]
     var onLosesFocusCallbackIds: [String: String] = [:]
 
@@ -62,7 +62,7 @@ public class AudioPlayerPlugin: CAPPlugin {
                 loopAudio: call.getBool("loop", false)
             )
 
-            audioSources[sourceId] = audioSource
+            try audioSources.add(source: audioSource)
 
             call.resolve()
         } catch AudioPlayerError.missingAudioSource {
@@ -268,7 +268,7 @@ public class AudioPlayerPlugin: CAPPlugin {
 
             let audioId = try audioId(call)
 
-            audioSources.removeValue(forKey: audioId)
+            audioSources.remove(sourceId: audioId)
             onLosesFocusCallbackIds.removeValue(forKey: audioId)
             onGainsFocusCallbackIds.removeValue(forKey: audioId)
 
@@ -382,7 +382,7 @@ public class AudioPlayerPlugin: CAPPlugin {
     func getAudioSource(
         methodName: String, call: CAPPluginCall, rejectIfError: Bool
     ) throws -> AudioSource {
-        let audioSource = audioSources[try audioId(call)]
+        let audioSource = audioSources.get(sourceId: try audioId(call))
 
         if audioSource == nil {
             print("Audio source with ID \(try audioId(call)) was not found.")

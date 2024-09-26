@@ -10,15 +10,21 @@ public class AudioSources {
             throw AudioPlayerError.sourceAlreadyExists
         }
 
-        audioSources[source.assetId] = source
+        audioSources[source.id] = source
     }
 
     public func remove(sourceId: String) -> Bool {
+        if !exists(sourceId: sourceId) {
+            return false
+        }
 
+        audioSources.removeValue(forKey: sourceId)
+
+        return true
     }
 
     public func exists(source: AudioSource) -> Bool {
-        return exists(sourceId: source.assetId)
+        return exists(sourceId: source.id)
     }
 
     public func exists(sourceId: String) -> Bool {
@@ -26,12 +32,13 @@ public class AudioSources {
     }
 
     public func hasNotification() -> Bool {
-
+        return forNotification() != nil
     }
 
     public func forNotification() -> AudioSource? {
         return audioSources.first(
-            where: <#T##((key: String, value: AudioSource)) throws -> Bool#>)
+            where: { source -> Bool in return source.value.useForNotification }
+        )?.value
     }
 
     public func count() -> Int {

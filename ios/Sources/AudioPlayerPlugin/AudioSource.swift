@@ -5,7 +5,7 @@ import MediaPlayer
 public class AudioSource: NSObject, AVAudioPlayerDelegate {
     let STANDARD_SEEK_IN_SECONDS: Int = 5
 
-    var assetId: String
+    var id: String
     var source: String
     var friendlyTitle: String
     var useForNotification: Bool
@@ -35,7 +35,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         loopAudio: Bool
     ) {
         self.pluginOwner = pluginOwner
-        self.assetId = id
+        self.id = id
         self.source = source
         self.friendlyTitle = friendlyTitle
         self.useForNotification = useForNotification
