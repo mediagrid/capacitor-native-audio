@@ -45,6 +45,14 @@ public class AudioPlayerPlugin: CAPPlugin {
     @objc func create(_ call: CAPPluginCall) {
         do {
             let sourceId = try audioId(call)
+
+            if audioSources.exists(sourceId: sourceId) {
+                print("An audio source with the ID \(sourceId) already exists")
+                call.reject("There was an issue creating the audio player [0].")
+
+                return
+            }
+
             guard let source = call.getString("audioSource") else {
                 throw AudioPlayerError.invalidPath
             }
@@ -62,14 +70,25 @@ public class AudioPlayerPlugin: CAPPlugin {
                 loopAudio: call.getBool("loop", false)
             )
 
+            if audioSources.count() == 0 && !audioSource.useForNotification {
+                throw AudioPlayerError.runtimeError(
+                    "An audio source with useForNotification = true must exist first."
+                )
+            }
+
+            if audioSources.hasNotification() && audioSource.useForNotification
+            {
+                throw AudioPlayerError.runtimeError(
+                    "An audio source with useForNotification = true already exists. There can only be one."
+                )
+            }
+
             try audioSources.add(source: audioSource)
 
             call.resolve()
-        } catch AudioPlayerError.missingAudioSource {
-            return
         } catch {
             call.reject(
-                "There was an issue creating the audio player.", nil, error)
+                "There was an issue creating the audio player [1].", nil, error)
         }
     }
 
