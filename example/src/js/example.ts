@@ -99,6 +99,14 @@ addClickEvent('stopButton', () => {
   AudioPlayer.stop({ audioId });
 });
 
+addClickEvent('changeMetadataButton', () => {
+  AudioPlayer.changeMetadata({
+    audioId: audioId,
+    friendlyTitle: 'A new title',
+    artworkSource: 'assets/sample_artwork_new.png',
+  });
+});
+
 addClickEvent('cleanupButton', async () => {
   setText('status', 'stopped');
   stopCurrentPositionUpdate(true);
