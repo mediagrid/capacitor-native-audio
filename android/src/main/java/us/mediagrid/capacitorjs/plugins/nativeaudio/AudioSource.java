@@ -33,8 +33,7 @@ public class AudioSource extends Binder {
 
     private AudioPlayerPlugin pluginOwner;
 
-    private ExoPlayer player;
-    private MediaController mediaController;
+    private Player player;
     private PlayerEventListener playerEventListener;
 
     private boolean isPlaying = false;
@@ -94,6 +93,24 @@ public class AudioSource extends Binder {
         player.setMediaItem(buildMediaItem());
         player.setPlayWhenReady(false);
         player.prepare();
+    }
+
+    public void changeMetadata(String newFriendlyTitle, String newArtworkSource) {
+        if (newFriendlyTitle != null) {
+            friendlyTitle = newFriendlyTitle;
+        }
+
+        if (newArtworkSource != null) {
+            artworkSource = newArtworkSource;
+        }
+
+        var currentMediaItem = getPlayer().getCurrentMediaItem();
+        var newMediaItem = currentMediaItem
+            .buildUpon()
+            .setMediaMetadata(getMediaMetadata())
+            .build();
+
+        getPlayer().replaceMediaItem(0, newMediaItem);
     }
 
     public float getDuration() {
@@ -191,19 +208,11 @@ public class AudioSource extends Binder {
     }
 
     public Player getPlayer() {
-        if (useForNotification) {
-            return mediaController;
-        }
-
         return player;
     }
 
     public void setPlayer(Player player) {
-        if (useForNotification) {
-            mediaController = (MediaController) player;
-        } else {
-            this.player = (ExoPlayer) player;
-        }
+        this.player = player;
     }
 
     public void releasePlayer() {

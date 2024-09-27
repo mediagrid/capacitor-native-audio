@@ -188,6 +188,28 @@ public class AudioPlayerPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void changeMetadata(PluginCall call) {
+        try {
+            if (!audioSourceExists("changeMetadata", call)) {
+                return;
+            }
+
+            AudioSource audioSource = audioSources.get(audioId(call));
+
+            postToLooper("changeMetadata", call, () -> {
+                audioSource.changeMetadata(
+                    call.getString("friendlyTitle"),
+                    call.getString("artworkSource")
+                );
+
+                call.resolve();
+            });
+        } catch (Exception ex) {
+            call.reject("There was an issue changing the metadata.", ex);
+        }
+    }
+
+    @PluginMethod
     public void getDuration(PluginCall call) {
         try {
             if (!audioSourceExists("getDuration", call)) {
