@@ -102,7 +102,7 @@ addClickEvent('stopButton', () => {
 addClickEvent('changeMetadataButton', () => {
   AudioPlayer.changeMetadata({
     audioId: audioId,
-    friendlyTitle: 'A new title',
+    friendlyTitle: 'A New Title',
     artworkSource: 'assets/sample_artwork_new.png',
   });
 });

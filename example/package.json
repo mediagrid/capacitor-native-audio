@@ -11,7 +11,8 @@
     "start": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "android": "npx cap run android && vite --host"
+    "android": "npx cap run android && vite --host",
+    "ios": "npx cap run ios && vite --host"
   },
   "dependencies": {
     "@capacitor/android": "^6.0.0",

@@ -87,11 +87,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
 
         friendlyTitle = unwrappedFriendlyTitle
 
-        removeRemoteTransportControls()
         removeNowPlaying()
-
         setupNowPlaying()
-        setupRemoteTransportControls()
     }
 
     func getDuration() -> TimeInterval {
