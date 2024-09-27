@@ -1,13 +1,13 @@
-import Foundation
 import AVFAudio
 import Capacitor
+import Foundation
 
 @objc(AudioPlayerPlugin)
 public class AudioPlayerPlugin: CAPPlugin {
     let audioSession = AVAudioSession.sharedInstance()
-    var audioSources: [String : AudioSource] = [:]
-    var onGainsFocusCallbackIds: [String : String] = [:]
-    var onLosesFocusCallbackIds: [String : String] = [:]
+    var audioSources = AudioSources()
+    var onGainsFocusCallbackIds: [String: String] = [:]
+    var onLosesFocusCallbackIds: [String: String] = [:]
 
     override public func load() {
         super.load()
@@ -45,8 +45,20 @@ public class AudioPlayerPlugin: CAPPlugin {
     @objc func create(_ call: CAPPluginCall) {
         do {
             let sourceId = try audioId(call)
-            guard let source = call.getString("audioSource") else { throw AudioPlayerError.invalidPath }
-            guard let friendlyTitle = call.getString("friendlyTitle") else { throw AudioPlayerError.invalidFriendlyName }
+
+            if audioSources.exists(sourceId: sourceId) {
+                print("An audio source with the ID \(sourceId) already exists")
+                call.reject("There was an issue creating the audio player [0].")
+
+                return
+            }
+
+            guard let source = call.getString("audioSource") else {
+                throw AudioPlayerError.invalidPath
+            }
+            guard let friendlyTitle = call.getString("friendlyTitle") else {
+                throw AudioPlayerError.invalidFriendlyName
+            }
 
             let audioSource = AudioSource(
                 pluginOwner: self,
@@ -58,63 +70,89 @@ public class AudioPlayerPlugin: CAPPlugin {
                 loopAudio: call.getBool("loop", false)
             )
 
-            audioSources[sourceId] = audioSource
+            if audioSources.count() == 0 && !audioSource.useForNotification {
+                throw AudioPlayerError.runtimeError(
+                    "An audio source with useForNotification = true must exist first."
+                )
+            }
+
+            if audioSources.hasNotification() && audioSource.useForNotification
+            {
+                throw AudioPlayerError.runtimeError(
+                    "An audio source with useForNotification = true already exists. There can only be one."
+                )
+            }
+
+            try audioSources.add(source: audioSource)
 
             call.resolve()
-        } catch AudioPlayerError.missingAudioSource {
-            return
         } catch {
-            call.reject("There was an issue creating the audio player.", nil, error)
+            call.reject(
+                "There was an issue creating the audio player [1].", nil, error)
         }
     }
 
     @objc func initialize(_ call: CAPPluginCall) {
         do {
-            try getAudioSource(methodName: "initialize", call: call).initialize()
+            try getAudioSource(methodName: "initialize", call: call)
+                .initialize()
 
             call.resolve()
         } catch AudioPlayerError.missingAudioSource {
             return
         } catch {
-            call.reject("There was an issue initializing the audio player.", nil, error)
+            call.reject(
+                "There was an issue initializing the audio player.", nil, error)
         }
     }
 
     @objc func changeAudioSource(_ call: CAPPluginCall) {
         do {
-            guard let newSource = call.getString("source") else { throw AudioPlayerError.invalidSource }
+            guard let newSource = call.getString("source") else {
+                throw AudioPlayerError.invalidSource
+            }
 
-            try getAudioSource(methodName: "changeAudioSource", call: call).changeAudioSource(newSource: newSource)
+            try getAudioSource(methodName: "changeAudioSource", call: call)
+                .changeAudioSource(newSource: newSource)
 
             call.resolve()
         } catch AudioPlayerError.missingAudioSource {
             return
         } catch {
-            call.reject("There was an issue changing the audio source.", nil, error)
+            call.reject(
+                "There was an issue changing the audio source.", nil, error)
         }
     }
 
     @objc func getDuration(_ call: CAPPluginCall) {
         do {
-            let duration = try getAudioSource(methodName: "duration", call: call).getDuration()
+            let duration = try getAudioSource(
+                methodName: "duration", call: call
+            ).getDuration()
 
             call.resolve(["duration": duration])
         } catch AudioPlayerError.missingAudioSource {
             return
         } catch {
-            call.reject("There was an issue getting the duration for the audio source.", nil, error)
+            call.reject(
+                "There was an issue getting the duration for the audio source.",
+                nil, error)
         }
     }
 
     @objc func getCurrentTime(_ call: CAPPluginCall) {
         do {
-            let currentTime = try getAudioSource(methodName: "currentTime", call: call).getCurrentTime()
+            let currentTime = try getAudioSource(
+                methodName: "currentTime", call: call
+            ).getCurrentTime()
 
             call.resolve(["currentTime": currentTime])
         } catch AudioPlayerError.missingAudioSource {
             return
         } catch {
-            call.reject("There was an issue getting the current time for the audio source.", nil, error)
+            call.reject(
+                "There was an issue getting the current time for the audio source.",
+                nil, error)
         }
     }
 
@@ -122,7 +160,7 @@ public class AudioPlayerPlugin: CAPPlugin {
         do {
             let audioSource = try getAudioSource(methodName: "play", call: call)
 
-            if (audioSource.useForNotification) {
+            if audioSource.useForNotification {
                 try audioSession.setActive(true)
             }
 
@@ -150,9 +188,12 @@ public class AudioPlayerPlugin: CAPPlugin {
 
     @objc func seek(_ call: CAPPluginCall) {
         do {
-            guard let timeInSeconds = call.getInt("timeInSeconds") else {throw AudioPlayerError.invalidSeekTime }
+            guard let timeInSeconds = call.getInt("timeInSeconds") else {
+                throw AudioPlayerError.invalidSeekTime
+            }
 
-            try getAudioSource(methodName: "seek", call: call).seek(timeInSeconds: Int64(timeInSeconds), fromUi: true)
+            try getAudioSource(methodName: "seek", call: call).seek(
+                timeInSeconds: Int64(timeInSeconds), fromUi: true)
 
             call.resolve()
         } catch AudioPlayerError.missingAudioSource {
@@ -168,7 +209,7 @@ public class AudioPlayerPlugin: CAPPlugin {
 
             audioSource.stop()
 
-            if (audioSource.useForNotification) {
+            if audioSource.useForNotification {
                 try audioSession.setActive(false)
             }
 
@@ -182,49 +223,62 @@ public class AudioPlayerPlugin: CAPPlugin {
 
     @objc func setVolume(_ call: CAPPluginCall) {
         do {
-            guard let volume = call.getFloat("volume") else {throw AudioPlayerError.invalidSeekTime }
+            guard let volume = call.getFloat("volume") else {
+                throw AudioPlayerError.invalidSeekTime
+            }
 
-            try getAudioSource(methodName: "setVolume", call: call).setVolume(volume: volume)
+            try getAudioSource(methodName: "setVolume", call: call).setVolume(
+                volume: volume)
 
             call.resolve()
         } catch AudioPlayerError.missingAudioSource {
             return
         } catch {
-            call.reject("There was an issue setting the audio volume.", nil, error)
+            call.reject(
+                "There was an issue setting the audio volume.", nil, error)
         }
     }
 
     @objc func setRate(_ call: CAPPluginCall) {
         do {
-            guard let rate = call.getFloat("rate") else {throw AudioPlayerError.invalidRate }
+            guard let rate = call.getFloat("rate") else {
+                throw AudioPlayerError.invalidRate
+            }
 
-            try getAudioSource(methodName: "setRate", call: call).setRate(rate: rate)
+            try getAudioSource(methodName: "setRate", call: call).setRate(
+                rate: rate)
 
             call.resolve()
         } catch AudioPlayerError.missingAudioSource {
             return
         } catch {
-            call.reject("There was an issue setting the rate of the audio.", nil, error)
+            call.reject(
+                "There was an issue setting the rate of the audio.", nil, error)
         }
     }
 
     @objc func isPlaying(_ call: CAPPluginCall) {
         do {
-            let isPlaying = try getAudioSource(methodName: "isPlaying", call: call).isPlaying()
+            let isPlaying = try getAudioSource(
+                methodName: "isPlaying", call: call
+            ).isPlaying()
 
             call.resolve(["isPlaying": isPlaying])
         } catch AudioPlayerError.missingAudioSource {
             return
         } catch {
-            call.reject("There was an issue getting the playing status of the audio.", nil, error)
+            call.reject(
+                "There was an issue getting the playing status of the audio.",
+                nil, error)
         }
     }
 
     @objc func destroy(_ call: CAPPluginCall) {
         do {
-            let audioSource = try getAudioSource(methodName: "destroy", call: call)
+            let audioSource = try getAudioSource(
+                methodName: "destroy", call: call)
 
-            if (audioSource.useForNotification) {
+            if audioSource.useForNotification {
                 try audioSession.setActive(false)
             }
 
@@ -233,7 +287,7 @@ public class AudioPlayerPlugin: CAPPlugin {
 
             let audioId = try audioId(call)
 
-            audioSources.removeValue(forKey: audioId)
+            audioSources.remove(sourceId: audioId)
             onLosesFocusCallbackIds.removeValue(forKey: audioId)
             onGainsFocusCallbackIds.removeValue(forKey: audioId)
 
@@ -241,7 +295,8 @@ public class AudioPlayerPlugin: CAPPlugin {
         } catch AudioPlayerError.missingAudioSource {
             return
         } catch {
-            call.reject("There was an issue cleaning up the audio player.", nil, error)
+            call.reject(
+                "There was an issue cleaning up the audio player.", nil, error)
         }
     }
 
@@ -252,7 +307,8 @@ public class AudioPlayerPlugin: CAPPlugin {
 
             onGainsFocusCallbackIds[try audioId(call)] = call.callbackId
         } catch {
-            call.reject("There was an issue registering onAppGainsFocus", nil, error)
+            call.reject(
+                "There was an issue registering onAppGainsFocus", nil, error)
         }
     }
 
@@ -263,7 +319,8 @@ public class AudioPlayerPlugin: CAPPlugin {
 
             onLosesFocusCallbackIds[try audioId(call)] = call.callbackId
         } catch {
-            call.reject("There was an issue registering onAppLosesFocus", nil, error)
+            call.reject(
+                "There was an issue registering onAppLosesFocus", nil, error)
         }
     }
 
@@ -272,11 +329,13 @@ public class AudioPlayerPlugin: CAPPlugin {
         bridge?.saveCall(call)
 
         do {
-            try getAudioSource(methodName: "onAudioReady", call: call).setOnReady(callbackId: call.callbackId)
+            try getAudioSource(methodName: "onAudioReady", call: call)
+                .setOnReady(callbackId: call.callbackId)
         } catch AudioPlayerError.missingAudioSource {
             return
         } catch {
-            call.reject("There was an issue initializing audio ready.", nil, error)
+            call.reject(
+                "There was an issue initializing audio ready.", nil, error)
         }
     }
 
@@ -285,11 +344,13 @@ public class AudioPlayerPlugin: CAPPlugin {
         bridge?.saveCall(call)
 
         do {
-            try getAudioSource(methodName: "onAudioEnd", call: call).setOnEnd(callbackId: call.callbackId)
+            try getAudioSource(methodName: "onAudioEnd", call: call).setOnEnd(
+                callbackId: call.callbackId)
         } catch AudioPlayerError.missingAudioSource {
             return
         } catch {
-            call.reject("There was an issue initializing audio end.", nil, error)
+            call.reject(
+                "There was an issue initializing audio end.", nil, error)
         }
 
     }
@@ -304,7 +365,9 @@ public class AudioPlayerPlugin: CAPPlugin {
         } catch AudioPlayerError.missingAudioSource {
             return
         } catch {
-            call.reject("There was an issue initializing playback status change.", nil, error)
+            call.reject(
+                "There was an issue initializing playback status change.", nil,
+                error)
         }
     }
 
@@ -328,18 +391,25 @@ public class AudioPlayerPlugin: CAPPlugin {
         return audioId
     }
 
-    func getAudioSource(methodName: String, call: CAPPluginCall) throws -> AudioSource {
-        return try getAudioSource(methodName: methodName, call: call, rejectIfError: true)
+    func getAudioSource(methodName: String, call: CAPPluginCall) throws
+        -> AudioSource
+    {
+        return try getAudioSource(
+            methodName: methodName, call: call, rejectIfError: true)
     }
 
-    func getAudioSource(methodName: String, call: CAPPluginCall, rejectIfError: Bool) throws -> AudioSource {
-        let audioSource = audioSources[try audioId(call)]
+    func getAudioSource(
+        methodName: String, call: CAPPluginCall, rejectIfError: Bool
+    ) throws -> AudioSource {
+        let audioSource = audioSources.get(sourceId: try audioId(call))
 
-        if (audioSource == nil) {
+        if audioSource == nil {
             print("Audio source with ID \(try audioId(call)) was not found.")
 
-            if (rejectIfError) {
-                call.reject("There was an issue trying to play the audio (\(methodName))")
+            if rejectIfError {
+                call.reject(
+                    "There was an issue trying to play the audio (\(methodName))"
+                )
             }
 
             throw AudioPlayerError.missingAudioSource
@@ -348,7 +418,7 @@ public class AudioPlayerPlugin: CAPPlugin {
         return audioSource!
     }
 
-    func makeFocusChangeCallbackCalls(callbackIds: [String : String]) {
+    func makeFocusChangeCallbackCalls(callbackIds: [String: String]) {
         for callbackId in callbackIds.values {
             bridge?.savedCall(withID: callbackId)?.resolve()
         }

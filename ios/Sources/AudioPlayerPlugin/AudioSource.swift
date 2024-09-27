@@ -5,7 +5,7 @@ import MediaPlayer
 public class AudioSource: NSObject, AVAudioPlayerDelegate {
     let STANDARD_SEEK_IN_SECONDS: Int = 5
 
-    var assetId: String
+    var id: String
     var source: String
     var friendlyTitle: String
     var useForNotification: Bool
@@ -35,7 +35,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         loopAudio: Bool
     ) {
         self.pluginOwner = pluginOwner
-        self.assetId = id
+        self.id = id
         self.source = source
         self.friendlyTitle = friendlyTitle
         self.useForNotification = useForNotification
@@ -47,14 +47,15 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         isPaused = false
         playerItem = try createPlayerItem()
 
-        if (loopAudio) {
+        if loopAudio {
             playerQueue = AVQueuePlayer()
-            playerLooper = AVPlayerLooper.init(player: playerQueue, templateItem: playerItem)
+            playerLooper = AVPlayerLooper.init(
+                player: playerQueue, templateItem: playerItem)
             observeAudioReady()
         } else {
             observeAudioReady()
             player = AVPlayer.init(playerItem: playerItem)
-            
+
             setupInterruptionNotifications()
         }
     }
@@ -62,15 +63,16 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     func changeAudioSource(newSource: String) throws {
         audioReadyObservation?.invalidate()
         audioReadyObservation = nil
-        
+
         removeOnEndObservation()
 
         source = newSource
         playerItem = try createPlayerItem()
 
-        if (loopAudio) {
+        if loopAudio {
             playerQueue.removeAllItems()
-            playerLooper = AVPlayerLooper.init(player: playerQueue, templateItem: playerItem)
+            playerLooper = AVPlayerLooper.init(
+                player: playerQueue, templateItem: playerItem)
             observeAudioReady()
         } else {
             observeAudioReady()
@@ -79,19 +81,19 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     }
 
     func getDuration() -> TimeInterval {
-        if (loopAudio) {
+        if loopAudio {
             return -1
         }
 
-        if (player.currentItem?.duration == CMTime.indefinite) {
-           return -1
+        if player.currentItem?.duration == CMTime.indefinite {
+            return -1
         }
 
         return player.currentItem?.duration.seconds ?? -1
     }
 
     func getCurrentTime() -> TimeInterval {
-        if (loopAudio) {
+        if loopAudio {
             return -1
         }
 
@@ -99,54 +101,54 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     }
 
     func play() {
-        if (loopAudio) {
+        if loopAudio {
             playerQueue.play()
         } else {
             player.play()
         }
 
-        if (!isPaused) {
+        if !isPaused {
             setupNowPlaying()
             setupRemoteTransportControls()
         } else {
             setNowPlayingCurrentTime()
         }
-        
+
         isPaused = false
         setNowPlayingPlaybackState(state: .playing)
     }
 
     func pause() {
-        if (loopAudio) {
+        if loopAudio {
             playerQueue.pause()
         } else {
             player.pause()
         }
-        
+
         isPaused = true
         setNowPlayingPlaybackState(state: .paused)
     }
 
     func seek(timeInSeconds: Int64, fromUi: Bool = false) {
-        if (loopAudio) {
+        if loopAudio {
             return
         }
 
         player.seek(to: getCmTime(seconds: timeInSeconds))
-        
-        if (fromUi) {
+
+        if fromUi {
             removeRemoteTransportControls()
             removeNowPlaying()
-            
+
             setupNowPlaying()
             setupRemoteTransportControls()
         } else {
             setNowPlayingCurrentTime()
         }
     }
-    
+
     func stop() {
-        if (loopAudio) {
+        if loopAudio {
             playerQueue.pause()
             playerQueue.seek(to: getCmTime(seconds: 0))
         } else {
@@ -161,7 +163,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     }
 
     func setVolume(volume: Float) {
-        if (loopAudio) {
+        if loopAudio {
             playerQueue.volume = volume
         } else {
             player.volume = volume
@@ -169,7 +171,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     }
 
     func setRate(rate: Float) {
-        if (loopAudio) {
+        if loopAudio {
             return
         }
 
@@ -189,15 +191,18 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     }
 
     func isPlaying() -> Bool {
-        if (loopAudio) {
+        if loopAudio {
             return playerQueue.rate > 0
-            || playerQueue.timeControlStatus == AVPlayer.TimeControlStatus.playing
-            || playerQueue.timeControlStatus == AVPlayer.TimeControlStatus.waitingToPlayAtSpecifiedRate
+                || playerQueue.timeControlStatus
+                    == AVPlayer.TimeControlStatus.playing
+                || playerQueue.timeControlStatus
+                    == AVPlayer.TimeControlStatus.waitingToPlayAtSpecifiedRate
         }
 
         return player.rate > 0
-        || player.timeControlStatus == AVPlayer.TimeControlStatus.playing
-        || player.timeControlStatus == AVPlayer.TimeControlStatus.waitingToPlayAtSpecifiedRate
+            || player.timeControlStatus == AVPlayer.TimeControlStatus.playing
+            || player.timeControlStatus
+                == AVPlayer.TimeControlStatus.waitingToPlayAtSpecifiedRate
     }
 
     func destroy() {
@@ -211,7 +216,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     private func createPlayerItem() throws -> AVPlayerItem {
         let url = URL.init(string: source)
 
-        if (url == nil) {
+        if url == nil {
             throw AudioPlayerError.invalidPath
         }
 
@@ -219,10 +224,10 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
 
         return player
     }
-    
+
     private func setupInterruptionNotifications() {
         let notificationCenter = NotificationCenter.default
-        
+
         notificationCenter.addObserver(
             self,
             selector: #selector(handleInterruption),
@@ -230,53 +235,61 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
             object: AVAudioSession.sharedInstance()
         )
     }
-    
+
     private func removeInterruptionNotifications() {
         let notificationCenter = NotificationCenter.default
-        
+
         notificationCenter.removeObserver(
             self,
             name: AVAudioSession.interruptionNotification,
             object: AVAudioSession.sharedInstance()
         )
     }
-    
+
     @objc private func handleInterruption(notification: Notification) {
         guard let userInfo = notification.userInfo,
-            let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
-            let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
-                return
-            }
-        
-        if (type == .began) {
+            let typeValue = userInfo[AVAudioSessionInterruptionTypeKey]
+                as? UInt,
+            let type = AVAudioSession.InterruptionType(rawValue: typeValue)
+        else {
+            return
+        }
+
+        if type == .began {
             print("Audio interruption has begun")
             pause()
 
-            makePluginCall(callbackId: onPlaybackStatusChangeCallbackId, data: [
-                "status": "paused"
-            ])
+            makePluginCall(
+                callbackId: onPlaybackStatusChangeCallbackId,
+                data: [
+                    "status": "paused"
+                ])
         }
-        
-        if (type == .ended) {
+
+        if type == .ended {
             print("Audio interruption has ended")
             play()
-            
-            makePluginCall(callbackId: onPlaybackStatusChangeCallbackId, data: [
-                "status": "playing"
-            ])
+
+            makePluginCall(
+                callbackId: onPlaybackStatusChangeCallbackId,
+                data: [
+                    "status": "playing"
+                ])
         }
     }
 
     private func observeAudioReady() {
-        if (onReadyCallbackId == "") {
+        if onReadyCallbackId == "" {
             return
         }
 
-        if (loopAudio) {
+        if loopAudio {
             audioReadyObservation = observe(
                 \.playerQueue?.currentItem?.status
             ) { object, change in
-                if (self.playerQueue.currentItem?.status == AVPlayerItem.Status.readyToPlay) {
+                if self.playerQueue.currentItem?.status
+                    == AVPlayerItem.Status.readyToPlay
+                {
                     self.makePluginCall(callbackId: self.onReadyCallbackId)
                     self.observeOnEnd()
                 }
@@ -285,7 +298,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
             audioReadyObservation = observe(
                 \.playerItem?.status
             ) { object, change in
-                if (self.playerItem.status == AVPlayerItem.Status.readyToPlay) {
+                if self.playerItem.status == AVPlayerItem.Status.readyToPlay {
                     self.makePluginCall(callbackId: self.onReadyCallbackId)
                     self.observeOnEnd()
                 }
@@ -294,54 +307,59 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     }
 
     private func observeOnEnd() {
-        if (onEndCallbackId == "") {
+        if onEndCallbackId == "" {
             return
         }
 
-        if (loopAudio) {
+        if loopAudio {
             return
         }
 
-        if (player.currentItem?.duration == CMTime.indefinite) {
-           return
+        if player.currentItem?.duration == CMTime.indefinite {
+            return
         }
 
         var times = [NSValue]()
-        times.append(NSValue(time: player.currentItem?.duration ?? getCmTime(seconds: 0)))
+        times.append(
+            NSValue(time: player.currentItem?.duration ?? getCmTime(seconds: 0))
+        )
 
         audioOnEndObservation = player.addBoundaryTimeObserver(
             forTimes: times,
             queue: .main
         ) {
             [weak self] in
-                self?.stop()
-                self?.makePluginCall(callbackId: self?.onEndCallbackId ?? "")
+            self?.stop()
+            self?.makePluginCall(callbackId: self?.onEndCallbackId ?? "")
         }
     }
-    
+
     private func removeOnEndObservation() {
-        if (audioOnEndObservation == nil) {
+        if audioOnEndObservation == nil {
             return
         }
-        
+
         player.removeTimeObserver(audioOnEndObservation as Any)
         audioOnEndObservation = nil
     }
 
     private func setupRemoteTransportControls() {
-        if (!useForNotification) {
+        if !useForNotification {
             return
         }
-        
+
         let commandCenter = MPRemoteCommandCenter.shared()
 
-        commandCenter.playCommand.addTarget { [unowned self] event -> MPRemoteCommandHandlerStatus in
-            if (!self.isPlaying()) {
+        commandCenter.playCommand.addTarget {
+            [unowned self] event -> MPRemoteCommandHandlerStatus in
+            if !self.isPlaying() {
                 self.play()
 
-                self.makePluginCall(callbackId: self.onPlaybackStatusChangeCallbackId, data: [
-                    "status": "playing"
-                ])
+                self.makePluginCall(
+                    callbackId: self.onPlaybackStatusChangeCallbackId,
+                    data: [
+                        "status": "playing"
+                    ])
 
                 return .success
             }
@@ -349,15 +367,18 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
             return .commandFailed
         }
 
-        commandCenter.pauseCommand.addTarget { [unowned self] event -> MPRemoteCommandHandlerStatus in
+        commandCenter.pauseCommand.addTarget {
+            [unowned self] event -> MPRemoteCommandHandlerStatus in
             print("Pause rate: " + String(self.player.rate))
-            
-            if (self.isPlaying()) {
+
+            if self.isPlaying() {
                 self.pause()
 
-                self.makePluginCall(callbackId: self.onPlaybackStatusChangeCallbackId, data: [
-                    "status": "paused"
-                ])
+                self.makePluginCall(
+                    callbackId: self.onPlaybackStatusChangeCallbackId,
+                    data: [
+                        "status": "paused"
+                    ])
 
                 return .success
             }
@@ -365,10 +386,12 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
             return .commandFailed
         }
 
-        commandCenter.skipBackwardCommand.addTarget { [unowned self] event -> MPRemoteCommandHandlerStatus in
-            var seekTime = floor(self.getCurrentTime() - Double(self.STANDARD_SEEK_IN_SECONDS))
+        commandCenter.skipBackwardCommand.addTarget {
+            [unowned self] event -> MPRemoteCommandHandlerStatus in
+            var seekTime = floor(
+                self.getCurrentTime() - Double(self.STANDARD_SEEK_IN_SECONDS))
 
-            if (seekTime < 0) {
+            if seekTime < 0 {
                 seekTime = 0
             }
 
@@ -376,16 +399,20 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
 
             return .success
         }
-        
-        commandCenter.skipBackwardCommand.preferredIntervals = [NSNumber.init(value: self.STANDARD_SEEK_IN_SECONDS)]
 
-        commandCenter.skipForwardCommand.addTarget { [unowned self] event -> MPRemoteCommandHandlerStatus in
-            var seekTime = ceil(self.getCurrentTime() + Double(self.STANDARD_SEEK_IN_SECONDS))
+        commandCenter.skipBackwardCommand.preferredIntervals = [
+            NSNumber.init(value: self.STANDARD_SEEK_IN_SECONDS)
+        ]
+
+        commandCenter.skipForwardCommand.addTarget {
+            [unowned self] event -> MPRemoteCommandHandlerStatus in
+            var seekTime = ceil(
+                self.getCurrentTime() + Double(self.STANDARD_SEEK_IN_SECONDS))
             var duration = floor(self.getDuration())
 
             duration = duration < 0 ? 0 : duration
 
-            if (seekTime > duration) {
+            if seekTime > duration {
                 seekTime = duration
             }
 
@@ -393,9 +420,11 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
 
             return .success
         }
-        
-        commandCenter.skipForwardCommand.preferredIntervals = [NSNumber.init(value: self.STANDARD_SEEK_IN_SECONDS)]
-        
+
+        commandCenter.skipForwardCommand.preferredIntervals = [
+            NSNumber.init(value: self.STANDARD_SEEK_IN_SECONDS)
+        ]
+
         commandCenter.playCommand.isEnabled = true
         commandCenter.pauseCommand.isEnabled = true
         commandCenter.skipBackwardCommand.isEnabled = true
@@ -405,7 +434,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     }
 
     private func removeRemoteTransportControls() {
-        if (!useForNotification) {
+        if !useForNotification {
             return
         }
 
@@ -418,16 +447,17 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     }
 
     private func setupNowPlaying() {
-        if (!useForNotification) {
+        if !useForNotification {
             return
         }
 
         let nowPlayingInfoCenter = MPNowPlayingInfoCenter.default()
-        var nowPlayingInfo = [String : Any]()
+        var nowPlayingInfo = [String: Any]()
 
         nowPlayingInfo[MPMediaItemPropertyTitle] = friendlyTitle
         nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = getDuration()
-        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = getCurrentTime()
+        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] =
+            getCurrentTime()
         nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player.rate
 
         if let image = UIImage(named: "NowPlayingIcon") {
@@ -435,40 +465,41 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
                 MPMediaItemArtwork(boundsSize: image.size) { size in
                     return image
                 }
-            }
+        }
 
         nowPlayingInfoCenter.nowPlayingInfo = nowPlayingInfo
     }
-    
+
     private func setNowPlayingCurrentTime() {
-        if (!useForNotification) {
+        if !useForNotification {
             return
         }
-        
+
         var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo
-        
-        if (nowPlayingInfo == nil) {
+
+        if nowPlayingInfo == nil {
             return
         }
-        
-        nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] = getCurrentTime()
+
+        nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] =
+            getCurrentTime()
 
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
     }
 
     private func removeNowPlaying() {
-        if (!useForNotification) {
+        if !useForNotification {
             return
         }
 
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
     }
-    
+
     private func setNowPlayingPlaybackState(state: MPNowPlayingPlaybackState) {
-        if (!useForNotification) {
+        if !useForNotification {
             return
         }
-        
+
         MPNowPlayingInfoCenter.default().playbackState = state
     }
 
@@ -480,14 +511,15 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         makePluginCall(callbackId: callbackId, data: [:])
     }
 
-    private func makePluginCall(callbackId: String, data: PluginCallResultData) {
-        if (callbackId == "") {
+    private func makePluginCall(callbackId: String, data: PluginCallResultData)
+    {
+        if callbackId == "" {
             return
         }
 
         let call = pluginOwner.bridge?.savedCall(withID: callbackId)
 
-        if (data.isEmpty) {
+        if data.isEmpty {
             call?.resolve()
         } else {
             call?.resolve(data)

@@ -7,4 +7,6 @@ enum AudioPlayerError: Error {
     case invalidRate
     case invalidSource
     case missingAudioSource
+    case sourceAlreadyExists
+    case runtimeError(String)
 }
