@@ -88,6 +88,7 @@ A PNG is recommended with the size of 1024 x 1024px. The same image can be used 
 * [`create(...)`](#create)
 * [`initialize(...)`](#initialize)
 * [`changeAudioSource(...)`](#changeaudiosource)
+* [`changeMetadata(...)`](#changemetadata)
 * [`getDuration(...)`](#getduration)
 * [`getCurrentTime(...)`](#getcurrenttime)
 * [`play(...)`](#play)
@@ -167,6 +168,23 @@ that a user can choose from.
 | **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a> & { source: string; }</code> |
 
 **Since:** 1.0.0
+
+--------------------
+
+
+### changeMetadata(...)
+
+```typescript
+changeMetadata(params: AudioPlayerDefaultParams & { friendlyTitle?: string; artworkSource?: string; }) => Promise<void>
+```
+
+Change the associated metadata of an existing audio source
+
+| Param        | Type                                                                                                                                |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a> & { friendlyTitle?: string; artworkSource?: string; }</code> |
+
+**Since:** 1.1.0
 
 --------------------
 
