@@ -23,7 +23,7 @@ export class AudioPlayerWeb extends WebPlugin implements AudioPlayerPlugin {
     throw this.unimplemented('Not implemented on web.');
   }
 
-  changeMetaData(
+  changeMetadata(
     params: AudioPlayerDefaultParams & {
       friendlyTitle?: string;
       artworkSource?: string;

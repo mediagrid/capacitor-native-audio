@@ -115,7 +115,7 @@ export interface AudioPlayerPlugin {
    *
    * @since 1.1.0
    */
-  changeMetaData(
+  changeMetadata(
     params: AudioPlayerDefaultParams & {
       friendlyTitle?: string;
       artworkSource?: string;
