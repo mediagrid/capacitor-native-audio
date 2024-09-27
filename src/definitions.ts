@@ -111,6 +111,18 @@ export interface AudioPlayerPlugin {
   ): Promise<void>;
 
   /**
+   * Change the associated metadata of an existing audio source
+   *
+   * @since 1.1.0
+   */
+  changeMetaData(
+    params: AudioPlayerDefaultParams & {
+      friendlyTitle?: string;
+      artworkSource?: string;
+    },
+  ): Promise<void>;
+
+  /**
    * Get the duration of the audio source.
    *
    * Should be called once the audio is ready (`onAudioReady`).
