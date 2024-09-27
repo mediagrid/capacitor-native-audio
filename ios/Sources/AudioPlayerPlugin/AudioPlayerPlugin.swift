@@ -124,6 +124,22 @@ public class AudioPlayerPlugin: CAPPlugin {
         }
     }
 
+    @objc func changeMetadata(_ call: CAPPluginCall) {
+        do {
+            try getAudioSource(methodName: "changeMetadata", call: call)
+                .changeMetadata(
+                    newFriendlyTitle: call.getString("friendlyTitle")
+                )
+
+            call.resolve()
+        } catch AudioPlayerError.missingAudioSource {
+            return
+        } catch {
+            call.reject(
+                "There was an issue changing the metadata.", nil, error)
+        }
+    }
+
     @objc func getDuration(_ call: CAPPluginCall) {
         do {
             let duration = try getAudioSource(
