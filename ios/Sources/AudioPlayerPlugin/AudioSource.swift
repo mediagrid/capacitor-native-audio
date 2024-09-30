@@ -80,6 +80,17 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         }
     }
 
+    func changeMetadata(newFriendlyTitle: String?) {
+        guard let unwrappedFriendlyTitle = newFriendlyTitle else {
+            return
+        }
+
+        friendlyTitle = unwrappedFriendlyTitle
+
+        removeNowPlaying()
+        setupNowPlaying()
+    }
+
     func getDuration() -> TimeInterval {
         if loopAudio {
             return -1

@@ -4,6 +4,7 @@ CAP_PLUGIN(AudioPlayerPlugin, "AudioPlayer",
     CAP_PLUGIN_METHOD(create, CAPPluginReturnPromise);
     CAP_PLUGIN_METHOD(initialize, CAPPluginReturnPromise);
     CAP_PLUGIN_METHOD(changeAudioSource, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(changeMetadata, CAPPluginReturnPromise);
     CAP_PLUGIN_METHOD(getDuration, CAPPluginReturnPromise);
     CAP_PLUGIN_METHOD(getCurrentTime, CAPPluginReturnPromise);
     CAP_PLUGIN_METHOD(play, CAPPluginReturnPromise);
