@@ -129,7 +129,8 @@ public class AudioPlayerPlugin: CAPPlugin {
         do {
             try getAudioSource(methodName: "changeMetadata", call: call)
                 .changeMetadata(
-                    newFriendlyTitle: call.getString("friendlyTitle")
+                    newFriendlyTitle: call.getString("friendlyTitle"),
+                    newArtworkSource: call.getString("artworkSource")
                 )
 
             call.resolve()

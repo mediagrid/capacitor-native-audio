@@ -105,6 +105,7 @@ addClickEvent('changeMetadataButton', () => {
     audioId: audioId,
     friendlyTitle: 'A New Title',
     artworkSource: 'assets/sample_artwork_new.png',
+    // artworkSource: 'https://placehold.co/1200.jpg',
   });
 });
 

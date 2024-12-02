@@ -84,12 +84,15 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         }
     }
 
-    func changeMetadata(newFriendlyTitle: String?) {
-        guard let unwrappedFriendlyTitle = newFriendlyTitle else {
-            return
+    func changeMetadata(newFriendlyTitle: String?, newArtworkSource: String?) {
+        if newFriendlyTitle != nil {
+            friendlyTitle = newFriendlyTitle ?? ""
         }
 
-        friendlyTitle = unwrappedFriendlyTitle
+        if newArtworkSource != nil {
+            artworkSource = newArtworkSource ?? ""
+            nowPlayingArtwork = nil
+        }
 
         removeNowPlaying()
         setupNowPlaying()
@@ -518,7 +521,6 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     private func downloadNowPlayingIcon() {
         guard var artworkSourceUrl = URL.init(string: artworkSource) else {
             print("Error: artworkSource '" + artworkSource + "' is invalid (1)")
-
             return
         }
 
@@ -529,7 +531,6 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
                 let baseAppPathUrl = URL.init(string: baseAppPath)
             else {
                 print("Error: Cannot find base path of application")
-
                 return
             }
 
@@ -545,7 +546,6 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
                 print(
                     "Error: artworkSource data is invalid - "
                         + artworkSourceUrl.absoluteString)
-
                 return
             }
 
