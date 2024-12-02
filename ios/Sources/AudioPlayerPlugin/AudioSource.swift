@@ -516,10 +516,25 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     }
 
     private func downloadNowPlayingIcon() {
-        guard let artworkSourceUrl = URL.init(string: artworkSource) else {
-            print("Error: artworkSource '" + artworkSource + "' is invalid")
+        guard var artworkSourceUrl = URL.init(string: artworkSource) else {
+            print("Error: artworkSource '" + artworkSource + "' is invalid (1)")
 
             return
+        }
+
+        if artworkSourceUrl.scheme != "https" {
+            guard
+                let baseAppPath = pluginOwner.bridge?.config.appLocation
+                    .absoluteString,
+                let baseAppPathUrl = URL.init(string: baseAppPath)
+            else {
+                print("Error: Cannot find base path of application")
+
+                return
+            }
+
+            artworkSourceUrl = baseAppPathUrl.appendingPathComponent(
+                artworkSourceUrl.absoluteString)
         }
 
         let task = URLSession.shared.dataTask(
@@ -527,7 +542,9 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         ) { data, _, _ in
             guard let imageData = data, let image = UIImage(data: imageData)
             else {
-                print("Error: artworkSource data is invalid")
+                print(
+                    "Error: artworkSource data is invalid - "
+                        + artworkSourceUrl.absoluteString)
 
                 return
             }
