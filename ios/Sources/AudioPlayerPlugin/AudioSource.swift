@@ -9,6 +9,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     var source: String
     var friendlyTitle: String
     var useForNotification: Bool
+    var artworkSource: String
     var isBackgroundMusic: Bool
     var onPlaybackStatusChangeCallbackId: String = ""
     var onReadyCallbackId: String = ""
@@ -21,6 +22,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     private var playerLooper: AVPlayerLooper!
     private var loopAudio: Bool
     private var isPaused: Bool = false
+    private var nowPlayingArtwork: MPMediaItemArtwork?
 
     private var audioReadyObservation: NSKeyValueObservation?
     private var audioOnEndObservation: Any?
@@ -31,6 +33,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         source: String,
         friendlyTitle: String,
         useForNotification: Bool,
+        artworkSource: String,
         isBackgroundMusic: Bool,
         loopAudio: Bool
     ) {
@@ -39,6 +42,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         self.source = source
         self.friendlyTitle = friendlyTitle
         self.useForNotification = useForNotification
+        self.artworkSource = artworkSource
         self.isBackgroundMusic = isBackgroundMusic
         self.loopAudio = loopAudio
     }
@@ -467,35 +471,75 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
 
         nowPlayingInfo[MPMediaItemPropertyTitle] = friendlyTitle
         nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = getDuration()
-        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] =
-            getCurrentTime()
+        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = getCurrentTime()
         nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player.rate
-
-        if let image = UIImage(named: "NowPlayingIcon") {
-            nowPlayingInfo[MPMediaItemPropertyArtwork] =
-                MPMediaItemArtwork(boundsSize: image.size) { size in
-                    return image
-                }
+        
+        let artwork = getNowPlayingArtwork()
+        
+        if artwork != nil {
+            nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
         }
 
         nowPlayingInfoCenter.nowPlayingInfo = nowPlayingInfo
     }
-
-    private func setNowPlayingCurrentTime() {
-        if !useForNotification {
-            return
-        }
-
+    
+    private func setNowPlayingInfoKey(for key: String, value: Any?) {
         var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo
 
         if nowPlayingInfo == nil {
             return
         }
 
-        nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] =
-            getCurrentTime()
+        nowPlayingInfo![key] = value
 
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+    }
+    
+    private func getNowPlayingArtwork() -> MPMediaItemArtwork? {
+        if nowPlayingArtwork != nil {
+            return nowPlayingArtwork
+        }
+        
+        if !artworkSource.isEmpty {
+            downloadNowPlayingIcon()
+        } else {
+            if let image = UIImage(named: "NowPlayingIcon") {
+                nowPlayingArtwork = MPMediaItemArtwork(boundsSize: image.size) { size in
+                    return image
+                }
+            }
+        }
+        
+        return nowPlayingArtwork
+    }
+    
+    private func downloadNowPlayingIcon() {
+        var artworkSourceUrl = URL.init(string: artworkSource)
+        
+        if artworkSourceUrl == nil {
+            print("Error: artworkSource '" + artworkSource + "' is invalid")
+            
+            return
+        }
+        
+        var task = URLSession.shared.dataTask(with: artworkSourceUrl.unsafelyUnwrapped) {data, _, _ in
+            guard var imageData = data, var image = UIImage(data: imageData) else {
+                return
+            }
+            
+            DispatchQueue.main.async {
+                self.nowPlayingArtwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+                self.setNowPlayingInfoKey(for: MPMediaItemPropertyArtwork, value: self.nowPlayingArtwork)
+            }
+        }
+    }
+
+    private func setNowPlayingCurrentTime() {
+        if !useForNotification {
+            return
+        }
+        
+        setNowPlayingInfoKey(for: MPNowPlayingInfoPropertyElapsedPlaybackTime, value: getCurrentTime())
     }
 
     private func removeNowPlaying() {
