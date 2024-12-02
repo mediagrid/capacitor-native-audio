@@ -516,19 +516,19 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     }
 
     private func downloadNowPlayingIcon() {
-        var artworkSourceUrl = URL.init(string: artworkSource)
-
-        if artworkSourceUrl == nil {
+        guard let artworkSourceUrl = URL.init(string: artworkSource) else {
             print("Error: artworkSource '" + artworkSource + "' is invalid")
 
             return
         }
 
-        var task = URLSession.shared.dataTask(
-            with: artworkSourceUrl.unsafelyUnwrapped
+        let task = URLSession.shared.dataTask(
+            with: artworkSourceUrl
         ) { data, _, _ in
-            guard var imageData = data, var image = UIImage(data: imageData)
+            guard let imageData = data, let image = UIImage(data: imageData)
             else {
+                print("Error: artworkSource data is invalid")
+
                 return
             }
 
@@ -541,6 +541,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
                     value: self.nowPlayingArtwork)
             }
         }
+
+        task.resume()
     }
 
     private func setNowPlayingCurrentTime() {
