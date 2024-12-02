@@ -471,18 +471,19 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
 
         nowPlayingInfo[MPMediaItemPropertyTitle] = friendlyTitle
         nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = getDuration()
-        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = getCurrentTime()
+        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] =
+            getCurrentTime()
         nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player.rate
-        
+
         let artwork = getNowPlayingArtwork()
-        
+
         if artwork != nil {
             nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
         }
 
         nowPlayingInfoCenter.nowPlayingInfo = nowPlayingInfo
     }
-    
+
     private func setNowPlayingInfoKey(for key: String, value: Any?) {
         var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo
 
@@ -494,42 +495,50 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
 
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
     }
-    
+
     private func getNowPlayingArtwork() -> MPMediaItemArtwork? {
         if nowPlayingArtwork != nil {
             return nowPlayingArtwork
         }
-        
+
         if !artworkSource.isEmpty {
             downloadNowPlayingIcon()
         } else {
             if let image = UIImage(named: "NowPlayingIcon") {
-                nowPlayingArtwork = MPMediaItemArtwork(boundsSize: image.size) { size in
+                nowPlayingArtwork = MPMediaItemArtwork(boundsSize: image.size) {
+                    size in
                     return image
                 }
             }
         }
-        
+
         return nowPlayingArtwork
     }
-    
+
     private func downloadNowPlayingIcon() {
         var artworkSourceUrl = URL.init(string: artworkSource)
-        
+
         if artworkSourceUrl == nil {
             print("Error: artworkSource '" + artworkSource + "' is invalid")
-            
+
             return
         }
-        
-        var task = URLSession.shared.dataTask(with: artworkSourceUrl.unsafelyUnwrapped) {data, _, _ in
-            guard var imageData = data, var image = UIImage(data: imageData) else {
+
+        var task = URLSession.shared.dataTask(
+            with: artworkSourceUrl.unsafelyUnwrapped
+        ) { data, _, _ in
+            guard var imageData = data, var image = UIImage(data: imageData)
+            else {
                 return
             }
-            
+
             DispatchQueue.main.async {
-                self.nowPlayingArtwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
-                self.setNowPlayingInfoKey(for: MPMediaItemPropertyArtwork, value: self.nowPlayingArtwork)
+                self.nowPlayingArtwork = MPMediaItemArtwork(
+                    boundsSize: image.size
+                ) { _ in image }
+                self.setNowPlayingInfoKey(
+                    for: MPMediaItemPropertyArtwork,
+                    value: self.nowPlayingArtwork)
             }
         }
     }
@@ -538,8 +547,10 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         if !useForNotification {
             return
         }
-        
-        setNowPlayingInfoKey(for: MPNowPlayingInfoPropertyElapsedPlaybackTime, value: getCurrentTime())
+
+        setNowPlayingInfoKey(
+            for: MPNowPlayingInfoPropertyElapsedPlaybackTime,
+            value: getCurrentTime())
     }
 
     private func removeNowPlaying() {
