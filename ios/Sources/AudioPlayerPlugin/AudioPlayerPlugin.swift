@@ -67,7 +67,9 @@ public class AudioPlayerPlugin: CAPPlugin {
                 friendlyTitle: friendlyTitle,
                 useForNotification: call.getBool("useForNotification", false),
                 isBackgroundMusic: call.getBool("isBackgroundMusic", false),
-                loopAudio: call.getBool("loop", false)
+                loopAudio: call.getBool("loop", false),
+                showSeekBackward: call.getBool("showSeekBackward", true),
+                showSeekForward: call.getBool("showSeekForward", true)
             )
 
             if audioSources.count() == 0 && !audioSource.useForNotification {
