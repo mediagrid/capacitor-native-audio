@@ -66,6 +66,7 @@ public class AudioPlayerPlugin: CAPPlugin {
                 source: source,
                 friendlyTitle: friendlyTitle,
                 useForNotification: call.getBool("useForNotification", false),
+                artworkSource: call.getString("artworkSource", ""),
                 isBackgroundMusic: call.getBool("isBackgroundMusic", false),
                 loopAudio: call.getBool("loop", false),
                 showSeekBackward: call.getBool("showSeekBackward", true),
@@ -130,7 +131,8 @@ public class AudioPlayerPlugin: CAPPlugin {
         do {
             try getAudioSource(methodName: "changeMetadata", call: call)
                 .changeMetadata(
-                    newFriendlyTitle: call.getString("friendlyTitle")
+                    newFriendlyTitle: call.getString("friendlyTitle"),
+                    newArtworkSource: call.getString("artworkSource")
                 )
 
             call.resolve()

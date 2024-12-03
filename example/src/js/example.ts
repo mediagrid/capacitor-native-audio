@@ -23,6 +23,7 @@ async function initialize(): Promise<void> {
     friendlyTitle: 'My Test Audio',
     useForNotification: true,
     artworkSource: 'assets/sample_artwork.png',
+    // artworkSource: 'https://placehold.co/1200.jpg',
     isBackgroundMusic: false,
     loop: false,
     showSeekForward: true,
@@ -106,6 +107,7 @@ addClickEvent('changeMetadataButton', () => {
     audioId: audioId,
     friendlyTitle: 'A New Title',
     artworkSource: 'assets/sample_artwork_new.png',
+    // artworkSource: 'https://placehold.co/1200.jpg',
   });
 });
 

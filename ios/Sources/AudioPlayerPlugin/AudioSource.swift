@@ -9,6 +9,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     var source: String
     var friendlyTitle: String
     var useForNotification: Bool
+    var artworkSource: String
     var isBackgroundMusic: Bool
     var onPlaybackStatusChangeCallbackId: String = ""
     var onReadyCallbackId: String = ""
@@ -19,6 +20,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     private var player: AVPlayer!
     @objc private var playerQueue: AVQueuePlayer!
     private var playerLooper: AVPlayerLooper!
+    private var nowPlayingArtwork: MPMediaItemArtwork?
+    
     private var loopAudio: Bool
     private var isPaused: Bool = false
     private var showSeekBackward: Bool
@@ -33,6 +36,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         source: String,
         friendlyTitle: String,
         useForNotification: Bool,
+        artworkSource: String,
         isBackgroundMusic: Bool,
         loopAudio: Bool,
         showSeekBackward: Bool,
@@ -43,6 +47,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         self.source = source
         self.friendlyTitle = friendlyTitle
         self.useForNotification = useForNotification
+        self.artworkSource = artworkSource
         self.isBackgroundMusic = isBackgroundMusic
         self.loopAudio = loopAudio
         self.showSeekBackward = showSeekBackward
@@ -86,12 +91,15 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         }
     }
 
-    func changeMetadata(newFriendlyTitle: String?) {
-        guard let unwrappedFriendlyTitle = newFriendlyTitle else {
-            return
+    func changeMetadata(newFriendlyTitle: String?, newArtworkSource: String?) {
+        if newFriendlyTitle != nil {
+            friendlyTitle = newFriendlyTitle ?? ""
         }
 
-        friendlyTitle = unwrappedFriendlyTitle
+        if newArtworkSource != nil {
+            artworkSource = newArtworkSource ?? ""
+            nowPlayingArtwork = nil
+        }
 
         removeNowPlaying()
         setupNowPlaying()
@@ -483,14 +491,88 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
             getCurrentTime()
         nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player.rate
 
-        if let image = UIImage(named: "NowPlayingIcon") {
-            nowPlayingInfo[MPMediaItemPropertyArtwork] =
-                MPMediaItemArtwork(boundsSize: image.size) { size in
-                    return image
-                }
+        let artwork = getNowPlayingArtwork()
+
+        if artwork != nil {
+            nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
         }
 
         nowPlayingInfoCenter.nowPlayingInfo = nowPlayingInfo
+    }
+
+    private func setNowPlayingInfoKey(for key: String, value: Any?) {
+        var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo
+
+        if nowPlayingInfo == nil {
+            return
+        }
+
+        nowPlayingInfo![key] = value
+
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+    }
+
+    private func getNowPlayingArtwork() -> MPMediaItemArtwork? {
+        if nowPlayingArtwork != nil {
+            return nowPlayingArtwork
+        }
+
+        if !artworkSource.isEmpty {
+            downloadNowPlayingIcon()
+        } else {
+            if let image = UIImage(named: "NowPlayingIcon") {
+                nowPlayingArtwork = MPMediaItemArtwork(boundsSize: image.size) {
+                    size in
+                    return image
+                }
+            }
+        }
+
+        return nowPlayingArtwork
+    }
+
+    private func downloadNowPlayingIcon() {
+        guard var artworkSourceUrl = URL.init(string: artworkSource) else {
+            print("Error: artworkSource '" + artworkSource + "' is invalid (1)")
+            return
+        }
+
+        if artworkSourceUrl.scheme != "https" {
+            guard
+                let baseAppPath = pluginOwner.bridge?.config.appLocation
+                    .absoluteString,
+                let baseAppPathUrl = URL.init(string: baseAppPath)
+            else {
+                print("Error: Cannot find base path of application")
+                return
+            }
+
+            artworkSourceUrl = baseAppPathUrl.appendingPathComponent(
+                artworkSourceUrl.absoluteString)
+        }
+
+        let task = URLSession.shared.dataTask(
+            with: artworkSourceUrl
+        ) { data, _, _ in
+            guard let imageData = data, let image = UIImage(data: imageData)
+            else {
+                print(
+                    "Error: artworkSource data is invalid - "
+                        + artworkSourceUrl.absoluteString)
+                return
+            }
+
+            DispatchQueue.main.async {
+                self.nowPlayingArtwork = MPMediaItemArtwork(
+                    boundsSize: image.size
+                ) { _ in image }
+                self.setNowPlayingInfoKey(
+                    for: MPMediaItemPropertyArtwork,
+                    value: self.nowPlayingArtwork)
+            }
+        }
+
+        task.resume()
     }
 
     private func setNowPlayingCurrentTime() {
@@ -498,16 +580,9 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
             return
         }
 
-        var nowPlayingInfo = MPNowPlayingInfoCenter.default().nowPlayingInfo
-
-        if nowPlayingInfo == nil {
-            return
-        }
-
-        nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] =
-            getCurrentTime()
-
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+        setNowPlayingInfoKey(
+            for: MPNowPlayingInfoPropertyElapsedPlaybackTime,
+            value: getCurrentTime())
     }
 
     private func removeNowPlaying() {
