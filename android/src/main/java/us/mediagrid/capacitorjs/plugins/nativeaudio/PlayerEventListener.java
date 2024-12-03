@@ -2,12 +2,8 @@ package us.mediagrid.capacitorjs.plugins.nativeaudio;
 
 import static androidx.media3.common.Player.*;
 
-import android.util.Log;
-
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PluginCall;
-
-import androidx.media3.common.Player;
 
 public class PlayerEventListener implements Listener {
 

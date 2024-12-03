@@ -27,7 +27,7 @@ async function initialize(): Promise<void> {
     isBackgroundMusic: false,
     loop: false,
     showSeekForward: true,
-    showSeekBackward: true
+    showSeekBackward: true,
   }).catch(ex => setError(ex));
 
   await AudioPlayer.create({
@@ -36,7 +36,7 @@ async function initialize(): Promise<void> {
     friendlyTitle: '',
     useForNotification: false,
     isBackgroundMusic: true,
-    loop: true
+    loop: true,
   }).catch(ex => setError(ex));
 
   await AudioPlayer.onAudioReady({ audioId: audioId }, async () => {

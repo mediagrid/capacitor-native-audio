@@ -11,7 +11,6 @@ import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MediaMetadata;
 import androidx.media3.common.AudioAttributes;
-import androidx.media3.session.MediaController;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -66,23 +65,27 @@ public class AudioSource extends Binder {
 
         setIsStopped();
 
-        player =
-            new ExoPlayer.Builder(context)
-                .setAudioAttributes(
-                    new AudioAttributes.Builder()
-                        .setUsage(C.USAGE_MEDIA)
-                        .setContentType(C.AUDIO_CONTENT_TYPE_SPEECH)
-                        .build(),
-                    false
-                )
-                .setWakeMode(C.WAKE_MODE_NETWORK)
-                .build();
+        player = new ExoPlayer.Builder(context)
+            .setWakeMode(C.WAKE_MODE_NETWORK)
+            .build();
+        setPlayerAttributes();
+
+        player.prepare();
+    }
+
+    public void setPlayerAttributes() {
+        player.setAudioAttributes(
+            new AudioAttributes.Builder()
+                .setUsage(C.USAGE_MEDIA)
+                .setContentType(useForNotification ? C.AUDIO_CONTENT_TYPE_SPEECH : C.AUDIO_CONTENT_TYPE_MUSIC)
+                .build(),
+            useForNotification
+        );
+
         player.setMediaItem(buildMediaItem());
         player.setRepeatMode(loopAudio ? ExoPlayer.REPEAT_MODE_ONE : ExoPlayer.REPEAT_MODE_OFF);
         player.setPlayWhenReady(false);
         player.addListener(new PlayerEventListener(pluginOwner, this));
-
-        player.prepare();
     }
 
     public void changeAudioSource(String newSource) {
