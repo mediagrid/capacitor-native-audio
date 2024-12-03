@@ -29,6 +29,7 @@ export interface AudioPlayerPrepareParams extends AudioPlayerDefaultParams {
    *
    * It must be created first and you may only have one at a time.
    *
+   * @default false
    * @since 1.0.0
    */
   useForNotification: boolean;
@@ -54,6 +55,7 @@ export interface AudioPlayerPrepareParams extends AudioPlayerDefaultParams {
    *
    * Should not be `true` when `useForNotification = true`.
    *
+   * @default false
    * @since 1.0.0
    */
   isBackgroundMusic?: boolean;
@@ -62,9 +64,28 @@ export interface AudioPlayerPrepareParams extends AudioPlayerDefaultParams {
    * Whether or not to loop other audio like background music
    * while the primary audio (`useForNotification = true`) is playing.
    *
+   * @default false
    * @since 1.0.0
    */
   loop?: boolean;
+
+  /**
+   * Whether or not to show the seek backward button on the OS's notification.
+   * Only has affect when `useForNotification = true`.
+   *
+   * @default true
+   * @since 1.2.0
+   */
+  showSeekBackward?: boolean;
+
+  /**
+   * Whether or not to show the seek forward button on the OS's notification.
+   * Only has affect when `useForNotification = true`.
+   *
+   * @default true
+   * @since 1.2.0
+   */
+  showSeekForward?: boolean;
 }
 
 export interface AudioPlayerListenerParams {

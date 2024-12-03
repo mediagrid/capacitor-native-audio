@@ -26,6 +26,8 @@ async function initialize(): Promise<void> {
     // artworkSource: 'https://placehold.co/1200.jpg',
     isBackgroundMusic: false,
     loop: false,
+    showSeekForward: true,
+    showSeekBackward: true
   }).catch(ex => setError(ex));
 
   await AudioPlayer.create({
@@ -34,7 +36,7 @@ async function initialize(): Promise<void> {
     friendlyTitle: '',
     useForNotification: false,
     isBackgroundMusic: true,
-    loop: true,
+    loop: true
   }).catch(ex => setError(ex));
 
   await AudioPlayer.onAudioReady({ audioId: audioId }, async () => {

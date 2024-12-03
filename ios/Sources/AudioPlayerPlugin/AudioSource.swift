@@ -20,9 +20,12 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     private var player: AVPlayer!
     @objc private var playerQueue: AVQueuePlayer!
     private var playerLooper: AVPlayerLooper!
+    private var nowPlayingArtwork: MPMediaItemArtwork?
+    
     private var loopAudio: Bool
     private var isPaused: Bool = false
-    private var nowPlayingArtwork: MPMediaItemArtwork?
+    private var showSeekBackward: Bool
+    private var showSeekForward: Bool
 
     private var audioReadyObservation: NSKeyValueObservation?
     private var audioOnEndObservation: Any?
@@ -35,7 +38,9 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         useForNotification: Bool,
         artworkSource: String,
         isBackgroundMusic: Bool,
-        loopAudio: Bool
+        loopAudio: Bool,
+        showSeekBackward: Bool,
+        showSeekForward: Bool
     ) {
         self.pluginOwner = pluginOwner
         self.id = id
@@ -45,6 +50,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         self.artworkSource = artworkSource
         self.isBackgroundMusic = isBackgroundMusic
         self.loopAudio = loopAudio
+        self.showSeekBackward = showSeekBackward
+        self.showSeekForward = showSeekForward
     }
 
     func initialize() throws {
@@ -404,49 +411,55 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
             return .commandFailed
         }
 
-        commandCenter.skipBackwardCommand.addTarget {
-            [unowned self] event -> MPRemoteCommandHandlerStatus in
-            var seekTime = floor(
-                self.getCurrentTime() - Double(self.STANDARD_SEEK_IN_SECONDS))
+        if showSeekBackward {
+            commandCenter.skipBackwardCommand.addTarget {
+                [unowned self] event -> MPRemoteCommandHandlerStatus in
+                var seekTime = floor(
+                    self.getCurrentTime()
+                        - Double(self.STANDARD_SEEK_IN_SECONDS))
 
-            if seekTime < 0 {
-                seekTime = 0
+                if seekTime < 0 {
+                    seekTime = 0
+                }
+
+                self.seek(timeInSeconds: Int64(seekTime))
+
+                return .success
             }
 
-            self.seek(timeInSeconds: Int64(seekTime))
-
-            return .success
+            commandCenter.skipBackwardCommand.preferredIntervals = [
+                NSNumber.init(value: self.STANDARD_SEEK_IN_SECONDS)
+            ]
         }
 
-        commandCenter.skipBackwardCommand.preferredIntervals = [
-            NSNumber.init(value: self.STANDARD_SEEK_IN_SECONDS)
-        ]
+        if showSeekForward {
+            commandCenter.skipForwardCommand.addTarget {
+                [unowned self] event -> MPRemoteCommandHandlerStatus in
+                var seekTime = ceil(
+                    self.getCurrentTime()
+                        + Double(self.STANDARD_SEEK_IN_SECONDS))
+                var duration = floor(self.getDuration())
 
-        commandCenter.skipForwardCommand.addTarget {
-            [unowned self] event -> MPRemoteCommandHandlerStatus in
-            var seekTime = ceil(
-                self.getCurrentTime() + Double(self.STANDARD_SEEK_IN_SECONDS))
-            var duration = floor(self.getDuration())
+                duration = duration < 0 ? 0 : duration
 
-            duration = duration < 0 ? 0 : duration
+                if seekTime > duration {
+                    seekTime = duration
+                }
 
-            if seekTime > duration {
-                seekTime = duration
+                self.seek(timeInSeconds: Int64(seekTime))
+
+                return .success
             }
 
-            self.seek(timeInSeconds: Int64(seekTime))
-
-            return .success
+            commandCenter.skipForwardCommand.preferredIntervals = [
+                NSNumber.init(value: self.STANDARD_SEEK_IN_SECONDS)
+            ]
         }
-
-        commandCenter.skipForwardCommand.preferredIntervals = [
-            NSNumber.init(value: self.STANDARD_SEEK_IN_SECONDS)
-        ]
 
         commandCenter.playCommand.isEnabled = true
         commandCenter.pauseCommand.isEnabled = true
-        commandCenter.skipBackwardCommand.isEnabled = true
-        commandCenter.skipForwardCommand.isEnabled = true
+        commandCenter.skipBackwardCommand.isEnabled = showSeekBackward
+        commandCenter.skipForwardCommand.isEnabled = showSeekForward
         commandCenter.seekBackwardCommand.isEnabled = false
         commandCenter.seekForwardCommand.isEnabled = false
     }
