@@ -4,10 +4,12 @@
 
 Play audio in a Capacitor app natively (Android/iOS) from a URL/web source simultaneously with background audio. Also supports background playing with an OS notification.
 
+All credits to original author Tom Westrick. Plugin is modified simply for adapting it for other use-cases.
+
 ## Install
 
 ```bash
-npm install @mediagrid/capacitor-native-audio
+npm install git+https://github.com/williamdphillips/capacitor-native-audio
 npx cap sync
 ```
 
