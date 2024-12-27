@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "MediagridCapacitorNativeAudio",
+    name: "SoundsCapacitorNativeAudio",
     platforms: [.iOS(.v13)],
     products: [
         .library(
