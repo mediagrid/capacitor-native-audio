@@ -88,24 +88,30 @@ A PNG is recommended with the size of 1024 x 1024px. The same image can be used 
 <docgen-index>
 
 * [`create(...)`](#create)
-* [`initialize(...)`](#initialize)
+* [`createMultiple(...)`](#createmultiple)
 * [`changeAudioSource(...)`](#changeaudiosource)
 * [`changeMetadata(...)`](#changemetadata)
-* [`getDuration(...)`](#getduration)
-* [`getCurrentTime(...)`](#getcurrenttime)
 * [`play(...)`](#play)
-* [`pause(...)`](#pause)
+* [`pause()`](#pause)
+* [`stop()`](#stop)
 * [`seek(...)`](#seek)
-* [`stop(...)`](#stop)
+* [`getCurrentTime()`](#getcurrenttime)
+* [`getDuration()`](#getduration)
+* [`playNext()`](#playnext)
+* [`playPrevious()`](#playprevious)
 * [`setVolume(...)`](#setvolume)
 * [`setRate(...)`](#setrate)
 * [`isPlaying(...)`](#isplaying)
 * [`destroy(...)`](#destroy)
-* [`onAppGainsFocus(...)`](#onappgainsfocus)
-* [`onAppLosesFocus(...)`](#onapplosesfocus)
+* [`getCurrentAudio()`](#getcurrentaudio)
 * [`onAudioReady(...)`](#onaudioready)
 * [`onAudioEnd(...)`](#onaudioend)
 * [`onPlaybackStatusChange(...)`](#onplaybackstatuschange)
+* [`onPlayNext(...)`](#onplaynext)
+* [`onPlayPrevious(...)`](#onplayprevious)
+* [`onSeek(...)`](#onseek)
+* [`addListener('onPlayNext' | 'onPlayPrevious' | 'onSeek' | 'onPlaybackStatusChange' | 'onAudioEnd', ...)`](#addlisteneronplaynext--onplayprevious--onseek--onplaybackstatuschange--onaudioend-)
+* [`setAudioSources(...)`](#setaudiosources)
 * [Interfaces](#interfaces)
 
 </docgen-index>
@@ -116,39 +122,33 @@ A PNG is recommended with the size of 1024 x 1024px. The same image can be used 
 ### create(...)
 
 ```typescript
-create(params: AudioPlayerPrepareParams) => Promise<{ success: boolean; }>
+create(params: AudioSource) => Promise<{ success: boolean; }>
 ```
 
-Create an audio source to be played.
+Create a single audio source for playback.
 
-| Param        | Type                                                                          |
-| ------------ | ----------------------------------------------------------------------------- |
-| **`params`** | <code><a href="#audioplayerprepareparams">AudioPlayerPrepareParams</a></code> |
+| Param        | Type                                                |
+| ------------ | --------------------------------------------------- |
+| **`params`** | <code><a href="#audiosource">AudioSource</a></code> |
 
 **Returns:** <code>Promise&lt;{ success: boolean; }&gt;</code>
-
-**Since:** 1.0.0
 
 --------------------
 
 
-### initialize(...)
+### createMultiple(...)
 
 ```typescript
-initialize(params: AudioPlayerDefaultParams) => Promise<{ success: boolean; }>
+createMultiple(params: { audioSources: AudioSource[]; }) => Promise<{ success: boolean; }>
 ```
 
-Initialize the audio source. Prepares the audio to be played, buffers and such.
+Create multiple audio sources for playlist management.
 
-Should be called after callbacks are registered (e.g. `onAudioReady`).
-
-| Param        | Type                                                                          |
-| ------------ | ----------------------------------------------------------------------------- |
-| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a></code> |
+| Param        | Type                                          |
+| ------------ | --------------------------------------------- |
+| **`params`** | <code>{ audioSources: AudioSource[]; }</code> |
 
 **Returns:** <code>Promise&lt;{ success: boolean; }&gt;</code>
-
-**Since:** 1.0.0
 
 --------------------
 
@@ -156,20 +156,14 @@ Should be called after callbacks are registered (e.g. `onAudioReady`).
 ### changeAudioSource(...)
 
 ```typescript
-changeAudioSource(params: AudioPlayerDefaultParams & { source: string; }) => Promise<void>
+changeAudioSource(params: { audioId: string; source: string; }) => Promise<void>
 ```
 
-Change the audio source on an existing audio source (`audioId`).
+Change the audio source for an existing player.
 
-This is useful for changing background music while the primary audio is playing
-or changing the primary audio before it is playing to accommodate different durations
-that a user can choose from.
-
-| Param        | Type                                                                                                |
-| ------------ | --------------------------------------------------------------------------------------------------- |
-| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a> & { source: string; }</code> |
-
-**Since:** 1.0.0
+| Param        | Type                                              |
+| ------------ | ------------------------------------------------- |
+| **`params`** | <code>{ audioId: string; source: string; }</code> |
 
 --------------------
 
@@ -177,56 +171,14 @@ that a user can choose from.
 ### changeMetadata(...)
 
 ```typescript
-changeMetadata(params: AudioPlayerDefaultParams & { friendlyTitle?: string; artworkSource?: string; }) => Promise<void>
+changeMetadata(params: { audioId: string; title?: string; artist?: string; albumTitle?: string; artworkSource?: string; }) => Promise<void>
 ```
 
-Change the associated metadata of an existing audio source
+Change the metadata of an existing audio source.
 
-| Param        | Type                                                                                                                                |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a> & { friendlyTitle?: string; artworkSource?: string; }</code> |
-
-**Since:** 1.1.0
-
---------------------
-
-
-### getDuration(...)
-
-```typescript
-getDuration(params: AudioPlayerDefaultParams) => Promise<{ duration: number; }>
-```
-
-Get the duration of the audio source.
-
-Should be called once the audio is ready (`onAudioReady`).
-
-| Param        | Type                                                                          |
-| ------------ | ----------------------------------------------------------------------------- |
-| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a></code> |
-
-**Returns:** <code>Promise&lt;{ duration: number; }&gt;</code>
-
-**Since:** 1.0.0
-
---------------------
-
-
-### getCurrentTime(...)
-
-```typescript
-getCurrentTime(params: AudioPlayerDefaultParams) => Promise<{ currentTime: number; }>
-```
-
-Get the current time of the audio source being played.
-
-| Param        | Type                                                                          |
-| ------------ | ----------------------------------------------------------------------------- |
-| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a></code> |
-
-**Returns:** <code>Promise&lt;{ currentTime: number; }&gt;</code>
-
-**Since:** 1.0.0
+| Param        | Type                                                                                                            |
+| ------------ | --------------------------------------------------------------------------------------------------------------- |
+| **`params`** | <code>{ audioId: string; title?: string; artist?: string; albumTitle?: string; artworkSource?: string; }</code> |
 
 --------------------
 
@@ -234,33 +186,36 @@ Get the current time of the audio source being played.
 ### play(...)
 
 ```typescript
-play(params: AudioPlayerDefaultParams) => Promise<void>
+play(params?: { audioId?: string | null | undefined; } | undefined) => Promise<void>
 ```
 
-Play the audio source.
+Play an audio source by its ID.
 
-| Param        | Type                                                                          |
-| ------------ | ----------------------------------------------------------------------------- |
-| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a></code> |
-
-**Since:** 1.0.0
+| Param        | Type                                       |
+| ------------ | ------------------------------------------ |
+| **`params`** | <code>{ audioId?: string \| null; }</code> |
 
 --------------------
 
 
-### pause(...)
+### pause()
 
 ```typescript
-pause(params: AudioPlayerDefaultParams) => Promise<void>
+pause() => Promise<void>
 ```
 
-Pause the audio source.
+Pause playback of an audio source.
 
-| Param        | Type                                                                          |
-| ------------ | ----------------------------------------------------------------------------- |
-| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a></code> |
+--------------------
 
-**Since:** 1.0.0
+
+### stop()
+
+```typescript
+stop() => Promise<void>
+```
+
+Stop playback and reset the audio source.
 
 --------------------
 
@@ -268,33 +223,62 @@ Pause the audio source.
 ### seek(...)
 
 ```typescript
-seek(params: AudioPlayerDefaultParams & { timeInSeconds: number; }) => Promise<void>
+seek(params: { timeInSeconds: number; }) => Promise<void>
 ```
 
-Seek the audio source to a specific time.
+Seek to a specific time in the audio source.
 
-| Param        | Type                                                                                                       |
-| ------------ | ---------------------------------------------------------------------------------------------------------- |
-| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a> & { timeInSeconds: number; }</code> |
-
-**Since:** 1.0.0
+| Param        | Type                                    |
+| ------------ | --------------------------------------- |
+| **`params`** | <code>{ timeInSeconds: number; }</code> |
 
 --------------------
 
 
-### stop(...)
+### getCurrentTime()
 
 ```typescript
-stop(params: AudioPlayerDefaultParams) => Promise<void>
+getCurrentTime() => Promise<{ currentTime: number; }>
 ```
 
-Stop playing the audio source and reset the current time to zero.
+Get the current playback time of an audio source.
 
-| Param        | Type                                                                          |
-| ------------ | ----------------------------------------------------------------------------- |
-| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a></code> |
+**Returns:** <code>Promise&lt;{ currentTime: number; }&gt;</code>
 
-**Since:** 1.0.0
+--------------------
+
+
+### getDuration()
+
+```typescript
+getDuration() => Promise<{ duration: number; }>
+```
+
+Get the duration of an audio source.
+
+**Returns:** <code>Promise&lt;{ duration: number; }&gt;</code>
+
+--------------------
+
+
+### playNext()
+
+```typescript
+playNext() => Promise<void>
+```
+
+Skip to the next audio source in the playlist.
+
+--------------------
+
+
+### playPrevious()
+
+```typescript
+playPrevious() => Promise<void>
+```
+
+Skip to the previous audio source in the playlist.
 
 --------------------
 
@@ -302,18 +286,14 @@ Stop playing the audio source and reset the current time to zero.
 ### setVolume(...)
 
 ```typescript
-setVolume(params: AudioPlayerDefaultParams & { volume: number; }) => Promise<void>
+setVolume(params: { volume: number; }) => Promise<void>
 ```
 
-Set the volume of the audio source. Should be a decimal less than or equal to `1.00`.
+Set the volume for the audio source.
 
-This is useful for background music.
-
-| Param        | Type                                                                                                |
-| ------------ | --------------------------------------------------------------------------------------------------- |
-| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a> & { volume: number; }</code> |
-
-**Since:** 1.0.0
+| Param        | Type                             |
+| ------------ | -------------------------------- |
+| **`params`** | <code>{ volume: number; }</code> |
 
 --------------------
 
@@ -321,17 +301,14 @@ This is useful for background music.
 ### setRate(...)
 
 ```typescript
-setRate(params: AudioPlayerDefaultParams & { rate: number; }) => Promise<void>
+setRate(params: { rate: number; }) => Promise<void>
 ```
 
-Set the rate for the audio source to be played at.
-Should be a decimal. An example being `1` is normal speed, `0.5` being half the speed and `1.5` being 1.5 times faster.
+Set the playback rate for the audio source.
 
-| Param        | Type                                                                                              |
-| ------------ | ------------------------------------------------------------------------------------------------- |
-| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a> & { rate: number; }</code> |
-
-**Since:** 1.0.0
+| Param        | Type                           |
+| ------------ | ------------------------------ |
+| **`params`** | <code>{ rate: number; }</code> |
 
 --------------------
 
@@ -339,18 +316,16 @@ Should be a decimal. An example being `1` is normal speed, `0.5` being half the 
 ### isPlaying(...)
 
 ```typescript
-isPlaying(params: AudioPlayerDefaultParams) => Promise<{ isPlaying: boolean; }>
+isPlaying(params: { audioId: string; }) => Promise<{ isPlaying: boolean; }>
 ```
 
-Wether or not the audio source is currently playing.
+Determine if the audio source is currently playing.
 
-| Param        | Type                                                                          |
-| ------------ | ----------------------------------------------------------------------------- |
-| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a></code> |
+| Param        | Type                              |
+| ------------ | --------------------------------- |
+| **`params`** | <code>{ audioId: string; }</code> |
 
 **Returns:** <code>Promise&lt;{ isPlaying: boolean; }&gt;</code>
-
-**Since:** 1.0.0
 
 --------------------
 
@@ -358,57 +333,27 @@ Wether or not the audio source is currently playing.
 ### destroy(...)
 
 ```typescript
-destroy(params: AudioPlayerDefaultParams) => Promise<void>
+destroy(params: { audioId: string; }) => Promise<void>
 ```
 
-Destroy all resources for the audio source.
-The audio source with `useForNotification = true` must be destroyed last.
+Destroy all resources associated with the audio source.
 
-| Param        | Type                                                                          |
-| ------------ | ----------------------------------------------------------------------------- |
-| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a></code> |
-
-**Since:** 1.0.0
+| Param        | Type                              |
+| ------------ | --------------------------------- |
+| **`params`** | <code>{ audioId: string; }</code> |
 
 --------------------
 
 
-### onAppGainsFocus(...)
+### getCurrentAudio()
 
 ```typescript
-onAppGainsFocus(params: AudioPlayerListenerParams, callback: () => void) => Promise<AudioPlayerListenerResult>
+getCurrentAudio() => Promise<CurrentAudio>
 ```
 
-Register a callback for when the app comes to the foreground.
+Get details about the currently active audio source.
 
-| Param          | Type                                                                            |
-| -------------- | ------------------------------------------------------------------------------- |
-| **`params`**   | <code><a href="#audioplayerlistenerparams">AudioPlayerListenerParams</a></code> |
-| **`callback`** | <code>() =&gt; void</code>                                                      |
-
-**Returns:** <code>Promise&lt;<a href="#audioplayerlistenerresult">AudioPlayerListenerResult</a>&gt;</code>
-
-**Since:** 1.0.0
-
---------------------
-
-
-### onAppLosesFocus(...)
-
-```typescript
-onAppLosesFocus(params: AudioPlayerListenerParams, callback: () => void) => Promise<AudioPlayerListenerResult>
-```
-
-Registers a callback from when the app goes to the background.
-
-| Param          | Type                                                                            |
-| -------------- | ------------------------------------------------------------------------------- |
-| **`params`**   | <code><a href="#audioplayerlistenerparams">AudioPlayerListenerParams</a></code> |
-| **`callback`** | <code>() =&gt; void</code>                                                      |
-
-**Returns:** <code>Promise&lt;<a href="#audioplayerlistenerresult">AudioPlayerListenerResult</a>&gt;</code>
-
-**Since:** 1.0.0
+**Returns:** <code>Promise&lt;<a href="#currentaudio">CurrentAudio</a>&gt;</code>
 
 --------------------
 
@@ -416,19 +361,17 @@ Registers a callback from when the app goes to the background.
 ### onAudioReady(...)
 
 ```typescript
-onAudioReady(params: AudioPlayerListenerParams, callback: () => void) => Promise<AudioPlayerListenerResult>
+onAudioReady(params: { audioId: string; }, callback: () => void) => Promise<{ callbackId: string; }>
 ```
 
-Registers a callback for when the audio source is ready to be played.
+Register a callback for when the audio source is ready for playback.
 
-| Param          | Type                                                                            |
-| -------------- | ------------------------------------------------------------------------------- |
-| **`params`**   | <code><a href="#audioplayerlistenerparams">AudioPlayerListenerParams</a></code> |
-| **`callback`** | <code>() =&gt; void</code>                                                      |
+| Param          | Type                              |
+| -------------- | --------------------------------- |
+| **`params`**   | <code>{ audioId: string; }</code> |
+| **`callback`** | <code>() =&gt; void</code>        |
 
-**Returns:** <code>Promise&lt;<a href="#audioplayerlistenerresult">AudioPlayerListenerResult</a>&gt;</code>
-
-**Since:** 1.0.0
+**Returns:** <code>Promise&lt;{ callbackId: string; }&gt;</code>
 
 --------------------
 
@@ -436,19 +379,17 @@ Registers a callback for when the audio source is ready to be played.
 ### onAudioEnd(...)
 
 ```typescript
-onAudioEnd(params: AudioPlayerListenerParams, callback: () => void) => Promise<AudioPlayerListenerResult>
+onAudioEnd(params: { audioId: string; }, callback: () => void) => Promise<{ callbackId: string; }>
 ```
 
-Registers a callback for when the audio source has ended (reached the end of the audio).
+Register a callback for when playback of the audio source ends.
 
-| Param          | Type                                                                            |
-| -------------- | ------------------------------------------------------------------------------- |
-| **`params`**   | <code><a href="#audioplayerlistenerparams">AudioPlayerListenerParams</a></code> |
-| **`callback`** | <code>() =&gt; void</code>                                                      |
+| Param          | Type                              |
+| -------------- | --------------------------------- |
+| **`params`**   | <code>{ audioId: string; }</code> |
+| **`callback`** | <code>() =&gt; void</code>        |
 
-**Returns:** <code>Promise&lt;<a href="#audioplayerlistenerresult">AudioPlayerListenerResult</a>&gt;</code>
-
-**Since:** 1.0.0
+**Returns:** <code>Promise&lt;{ callbackId: string; }&gt;</code>
 
 --------------------
 
@@ -456,20 +397,100 @@ Registers a callback for when the audio source has ended (reached the end of the
 ### onPlaybackStatusChange(...)
 
 ```typescript
-onPlaybackStatusChange(params: AudioPlayerListenerParams, callback: (result: { status: 'playing' | 'paused' | 'stopped'; }) => void) => Promise<AudioPlayerListenerResult>
+onPlaybackStatusChange(callback: (result: { status: "stopped" | "paused" | "playing"; }) => void) => Promise<{ callbackId: string; }>
 ```
 
-Registers a callback for when state of playback for the audio source has changed.
-This should be used to update the UI when the notification controls are used to control the playback.
+Register a callback for playback status changes.
 
 | Param          | Type                                                                              |
 | -------------- | --------------------------------------------------------------------------------- |
-| **`params`**   | <code><a href="#audioplayerlistenerparams">AudioPlayerListenerParams</a></code>   |
-| **`callback`** | <code>(result: { status: 'playing' \| 'paused' \| 'stopped'; }) =&gt; void</code> |
+| **`callback`** | <code>(result: { status: 'stopped' \| 'paused' \| 'playing'; }) =&gt; void</code> |
 
-**Returns:** <code>Promise&lt;<a href="#audioplayerlistenerresult">AudioPlayerListenerResult</a>&gt;</code>
+**Returns:** <code>Promise&lt;{ callbackId: string; }&gt;</code>
 
-**Since:** 1.0.0
+--------------------
+
+
+### onPlayNext(...)
+
+```typescript
+onPlayNext(callback: () => void) => Promise<{ callbackId: string; }>
+```
+
+Register a callback for when the next track is played.
+
+| Param          | Type                       |
+| -------------- | -------------------------- |
+| **`callback`** | <code>() =&gt; void</code> |
+
+**Returns:** <code>Promise&lt;{ callbackId: string; }&gt;</code>
+
+--------------------
+
+
+### onPlayPrevious(...)
+
+```typescript
+onPlayPrevious(callback: () => void) => Promise<{ callbackId: string; }>
+```
+
+Register a callback for when the previous track is played.
+
+| Param          | Type                       |
+| -------------- | -------------------------- |
+| **`callback`** | <code>() =&gt; void</code> |
+
+**Returns:** <code>Promise&lt;{ callbackId: string; }&gt;</code>
+
+--------------------
+
+
+### onSeek(...)
+
+```typescript
+onSeek(callback: (result: { time: number; }) => void) => Promise<{ callbackId: string; }>
+```
+
+Register a callback for seek events.
+
+| Param          | Type                                                |
+| -------------- | --------------------------------------------------- |
+| **`callback`** | <code>(result: { time: number; }) =&gt; void</code> |
+
+**Returns:** <code>Promise&lt;{ callbackId: string; }&gt;</code>
+
+--------------------
+
+
+### addListener('onPlayNext' | 'onPlayPrevious' | 'onSeek' | 'onPlaybackStatusChange' | 'onAudioEnd', ...)
+
+```typescript
+addListener(eventName: 'onPlayNext' | 'onPlayPrevious' | 'onSeek' | 'onPlaybackStatusChange' | 'onAudioEnd', listenerFunc: (data: any) => void) => Promise<PluginListenerHandle>
+```
+
+Add listeners for events
+
+| Param              | Type                                                                                                  |
+| ------------------ | ----------------------------------------------------------------------------------------------------- |
+| **`eventName`**    | <code>'onPlayNext' \| 'onPlayPrevious' \| 'onSeek' \| 'onPlaybackStatusChange' \| 'onAudioEnd'</code> |
+| **`listenerFunc`** | <code>(data: any) =&gt; void</code>                                                                   |
+
+**Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
+
+--------------------
+
+
+### setAudioSources(...)
+
+```typescript
+setAudioSources(options: { audioSources: AudioSource[]; }) => Promise<void>
+```
+
+Set all audio sources (useful for setting a new playlist without creating a new AudioPlayer)
+
+| Param         | Type                                          |
+| ------------- | --------------------------------------------- |
+| **`options`** | <code>{ audioSources: AudioSource[]; }</code> |
 
 --------------------
 
@@ -477,38 +498,36 @@ This should be used to update the UI when the notification controls are used to 
 ### Interfaces
 
 
-#### AudioPlayerPrepareParams
+#### AudioSource
 
-| Prop                     | Type                 | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Default            | Since |
-| ------------------------ | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ----- |
-| **`audioSource`**        | <code>string</code>  | A URI for the audio file to play                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |                    | 1.0.0 |
-| **`friendlyTitle`**      | <code>string</code>  | The title/name of the audio file to be used on the notification                                                                                                                                                                                                                                                                                                                                                                                                                                          |                    | 1.0.0 |
-| **`useForNotification`** | <code>boolean</code> | Whether to use this audio file for the notification. This is considered the primary audio to play. It must be created first and you may only have one at a time.                                                                                                                                                                                                                                                                                                                                         | <code>false</code> | 1.0.0 |
-| **`artworkSource`**      | <code>string</code>  | A URI for the album art image to display on the Android/iOS notification. Can also be an in-app source. Pulls from `android/app/src/assets/public` and `ios/App/App/public`. If using [Vite](https://vitejs.dev/guide/assets.html#the-public-directory), you would put the image in your `public` folder and the build process will copy to `dist` which in turn will be copied to the Android/iOS assets by Capacitor. A PNG is the best option with square dimensions. 1200 x 1200px is a good option. |                    | 1.0.0 |
-| **`isBackgroundMusic`**  | <code>boolean</code> | Is this audio for background music/audio. Should not be `true` when `useForNotification = true`.                                                                                                                                                                                                                                                                                                                                                                                                         | <code>false</code> | 1.0.0 |
-| **`loop`**               | <code>boolean</code> | Whether or not to loop other audio like background music while the primary audio (`useForNotification = true`) is playing.                                                                                                                                                                                                                                                                                                                                                                               | <code>false</code> | 1.0.0 |
-| **`showSeekBackward`**   | <code>boolean</code> | Whether or not to show the seek backward button on the OS's notification. Only has affect when `useForNotification = true`.                                                                                                                                                                                                                                                                                                                                                                              | <code>true</code>  | 1.2.0 |
-| **`showSeekForward`**    | <code>boolean</code> | Whether or not to show the seek forward button on the OS's notification. Only has affect when `useForNotification = true`.                                                                                                                                                                                                                                                                                                                                                                               | <code>true</code>  | 1.2.0 |
+| Prop                | Type                | Description                                   |
+| ------------------- | ------------------- | --------------------------------------------- |
+| **`audioId`**       | <code>string</code> | Unique identifier for the audio source.       |
+| **`source`**        | <code>string</code> | A URI for the audio file to play.             |
+| **`title`**         | <code>string</code> | Title of the audio track.                     |
+| **`artist`**        | <code>string</code> | Artist of the audio track.                    |
+| **`albumTitle`**    | <code>string</code> | Album title of the audio track.               |
+| **`artworkSource`** | <code>string</code> | URI for the artwork image of the audio track. |
 
 
-#### AudioPlayerDefaultParams
+#### CurrentAudio
 
-| Prop          | Type                | Description                                        | Since |
-| ------------- | ------------------- | -------------------------------------------------- | ----- |
-| **`audioId`** | <code>string</code> | Any string to differentiate different audio files. | 1.0.0 |
+| Prop                | Type                 | Description                                           |
+| ------------------- | -------------------- | ----------------------------------------------------- |
+| **`audioId`**       | <code>string</code>  | Unique identifier for the current audio source.       |
+| **`title`**         | <code>string</code>  | Title of the current audio track.                     |
+| **`artist`**        | <code>string</code>  | Artist of the current audio track.                    |
+| **`albumTitle`**    | <code>string</code>  | Album title of the current audio track.               |
+| **`artworkSource`** | <code>string</code>  | URI for the artwork image of the current audio track. |
+| **`duration`**      | <code>number</code>  | Duration of the current audio track in seconds.       |
+| **`currentTime`**   | <code>number</code>  | Current playback time of the audio track in seconds.  |
+| **`isPlaying`**     | <code>boolean</code> | Whether the current audio is playing.                 |
 
 
-#### AudioPlayerListenerResult
+#### PluginListenerHandle
 
-| Prop             | Type                |
-| ---------------- | ------------------- |
-| **`callbackId`** | <code>string</code> |
-
-
-#### AudioPlayerListenerParams
-
-| Prop          | Type                | Description                                 | Since |
-| ------------- | ------------------- | ------------------------------------------- | ----- |
-| **`audioId`** | <code>string</code> | The `audioId` set when `create` was called. | 1.0.0 |
+| Prop         | Type                                      |
+| ------------ | ----------------------------------------- |
+| **`remove`** | <code>() =&gt; Promise&lt;void&gt;</code> |
 
 </docgen-api>

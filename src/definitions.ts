@@ -1,278 +1,227 @@
-export interface AudioPlayerDefaultParams {
+import type { PluginListenerHandle } from '@capacitor/core';
+
+export interface AudioSource {
   /**
-   * Any string to differentiate different audio files.
-   *
-   * @since 1.0.0
+   * Unique identifier for the audio source.
    */
   audioId: string;
+
+  /**
+   * A URI for the audio file to play.
+   */
+  source: string;
+
+  /**
+   * Title of the audio track.
+   */
+  title: string;
+
+  /**
+   * Artist of the audio track.
+   */
+  artist: string;
+
+  /**
+   * Album title of the audio track.
+   */
+  albumTitle: string;
+
+  /**
+   * URI for the artwork image of the audio track.
+   */
+  artworkSource: string;
 }
 
-export interface AudioPlayerPrepareParams extends AudioPlayerDefaultParams {
+export interface CurrentAudio {
   /**
-   * A URI for the audio file to play
-   *
-   * @example A public web source: https://example.com/example.mp3
-   * @since 1.0.0
-   */
-  audioSource: string;
-
-  /**
-   * The title/name of the audio file to be used on the notification
-   *
-   * @since 1.0.0
-   */
-  friendlyTitle: string;
-
-  /**
-   * Whether to use this audio file for the notification.
-   * This is considered the primary audio to play.
-   *
-   * It must be created first and you may only have one at a time.
-   *
-   * @default false
-   * @since 1.0.0
-   */
-  useForNotification: boolean;
-
-  /**
-   * A URI for the album art image to display on the Android/iOS notification.
-   *
-   * Can also be an in-app source. Pulls from `android/app/src/assets/public` and `ios/App/App/public`.
-   * If using [Vite](https://vitejs.dev/guide/assets.html#the-public-directory),
-   * you would put the image in your `public` folder and the build process will copy to `dist`
-   * which in turn will be copied to the Android/iOS assets by Capacitor.
-   *
-   * A PNG is the best option with square dimensions. 1200 x 1200px is a good option.
-   *
-   * @example A public web source: https://example.com/artwork.png
-   * @example An in-app source: images/artwork.png
-   * @since 1.0.0
-   */
-  artworkSource?: string;
-
-  /**
-   * Is this audio for background music/audio.
-   *
-   * Should not be `true` when `useForNotification = true`.
-   *
-   * @default false
-   * @since 1.0.0
-   */
-  isBackgroundMusic?: boolean;
-
-  /**
-   * Whether or not to loop other audio like background music
-   * while the primary audio (`useForNotification = true`) is playing.
-   *
-   * @default false
-   * @since 1.0.0
-   */
-  loop?: boolean;
-
-  /**
-   * Whether or not to show the seek backward button on the OS's notification.
-   * Only has affect when `useForNotification = true`.
-   *
-   * @default true
-   * @since 1.2.0
-   */
-  showSeekBackward?: boolean;
-
-  /**
-   * Whether or not to show the seek forward button on the OS's notification.
-   * Only has affect when `useForNotification = true`.
-   *
-   * @default true
-   * @since 1.2.0
-   */
-  showSeekForward?: boolean;
-}
-
-export interface AudioPlayerListenerParams {
-  /**
-   * The `audioId` set when `create` was called.
-   *
-   * @since 1.0.0
+   * Unique identifier for the current audio source.
    */
   audioId: string;
-}
 
-export interface AudioPlayerListenerResult {
-  callbackId: string;
+  /**
+   * Title of the current audio track.
+   */
+  title: string;
+
+  /**
+   * Artist of the current audio track.
+   */
+  artist: string;
+
+  /**
+   * Album title of the current audio track.
+   */
+  albumTitle: string;
+
+  /**
+   * URI for the artwork image of the current audio track.
+   */
+  artworkSource: string;
+
+  /**
+   * Duration of the current audio track in seconds.
+   */
+  duration: number;
+
+  /**
+   * Current playback time of the audio track in seconds.
+   */
+  currentTime: number;
+
+  /**
+   * Whether the current audio is playing.
+   */
+  isPlaying: boolean;
 }
 
 export interface AudioPlayerPlugin {
   /**
-   * Create an audio source to be played.
-   *
-   * @since 1.0.0
+   * Create a single audio source for playback.
    */
-  create(params: AudioPlayerPrepareParams): Promise<{ success: boolean }>;
+  create(params: AudioSource): Promise<{ success: boolean }>;
 
   /**
-   * Initialize the audio source. Prepares the audio to be played, buffers and such.
-   *
-   * Should be called after callbacks are registered (e.g. `onAudioReady`).
-   *
-   * @since 1.0.0
+   * Create multiple audio sources for playlist management.
    */
-  initialize(params: AudioPlayerDefaultParams): Promise<{ success: boolean }>;
+  createMultiple(params: { audioSources: AudioSource[] }): Promise<{ success: boolean }>;
 
   /**
-   * Change the audio source on an existing audio source (`audioId`).
-   *
-   * This is useful for changing background music while the primary audio is playing
-   * or changing the primary audio before it is playing to accommodate different durations
-   * that a user can choose from.
-   *
-   * @since 1.0.0
+   * Change the audio source for an existing player.
    */
-  changeAudioSource(
-    params: AudioPlayerDefaultParams & { source: string },
-  ): Promise<void>;
+  changeAudioSource(params: { audioId: string; source: string }): Promise<void>;
 
   /**
-   * Change the associated metadata of an existing audio source
-   *
-   * @since 1.1.0
+   * Change the metadata of an existing audio source.
    */
   changeMetadata(
-    params: AudioPlayerDefaultParams & {
-      friendlyTitle?: string;
+    params: {
+      audioId: string;
+      title?: string;
+      artist?: string;
+      albumTitle?: string;
       artworkSource?: string;
     },
   ): Promise<void>;
 
   /**
-   * Get the duration of the audio source.
-   *
-   * Should be called once the audio is ready (`onAudioReady`).
-   *
-   * @since 1.0.0
+   * Play an audio source by its ID.
    */
-  getDuration(params: AudioPlayerDefaultParams): Promise<{ duration: number }>;
+    play(params?: { audioId?: string | null }): Promise<void>;
 
   /**
-   * Get the current time of the audio source being played.
-   *
-   * @since 1.0.0
+   * Pause playback of an audio source.
    */
-  getCurrentTime(
-    params: AudioPlayerDefaultParams,
-  ): Promise<{ currentTime: number }>;
+  pause(): Promise<void>;
 
   /**
-   * Play the audio source.
-   *
-   * @since 1.0.0
+   * Stop playback and reset the audio source.
    */
-  play(params: AudioPlayerDefaultParams): Promise<void>;
+  stop(): Promise<void>;
 
   /**
-   * Pause the audio source.
-   *
-   * @since 1.0.0
+   * Seek to a specific time in the audio source.
    */
-  pause(params: AudioPlayerDefaultParams): Promise<void>;
+  seek(params: { timeInSeconds: number }): Promise<void>;
 
   /**
-   * Seek the audio source to a specific time.
-   *
-   * @since 1.0.0
+   * Get the current playback time of an audio source.
    */
-  seek(
-    params: AudioPlayerDefaultParams & { timeInSeconds: number },
-  ): Promise<void>;
+  getCurrentTime(): Promise<{ currentTime: number }>;
 
   /**
-   * Stop playing the audio source and reset the current time to zero.
-   *
-   * @since 1.0.0
+   * Get the duration of an audio source.
    */
-  stop(params: AudioPlayerDefaultParams): Promise<void>;
+  getDuration(): Promise<{ duration: number }>;
 
   /**
-   * Set the volume of the audio source. Should be a decimal less than or equal to `1.00`.
-   *
-   * This is useful for background music.
-   *
-   * @since 1.0.0
+   * Skip to the next audio source in the playlist.
    */
-  setVolume(
-    params: AudioPlayerDefaultParams & { volume: number },
-  ): Promise<void>;
+  playNext(): Promise<void>;
 
   /**
-   * Set the rate for the audio source to be played at.
-   * Should be a decimal. An example being `1` is normal speed, `0.5` being half the speed and `1.5` being 1.5 times faster.
-   *
-   * @since 1.0.0
+   * Skip to the previous audio source in the playlist.
    */
-  setRate(params: AudioPlayerDefaultParams & { rate: number }): Promise<void>;
+  playPrevious(): Promise<void>;
 
   /**
-   * Wether or not the audio source is currently playing.
-   *
-   * @since 1.0.0
+   * Set the volume for the audio source.
    */
-  isPlaying(params: AudioPlayerDefaultParams): Promise<{ isPlaying: boolean }>;
+  setVolume(params: { volume: number }): Promise<void>;
 
   /**
-   * Destroy all resources for the audio source.
-   * The audio source with `useForNotification = true` must be destroyed last.
-   *
-   * @since 1.0.0
+   * Set the playback rate for the audio source.
    */
-  destroy(params: AudioPlayerDefaultParams): Promise<void>;
+  setRate(params: { rate: number }): Promise<void>;
 
   /**
-   * Register a callback for when the app comes to the foreground.
-   *
-   * @since 1.0.0
+   * Determine if the audio source is currently playing.
    */
-  onAppGainsFocus(
-    params: AudioPlayerListenerParams,
-    callback: () => void,
-  ): Promise<AudioPlayerListenerResult>;
+  isPlaying(params: { audioId: string }): Promise<{ isPlaying: boolean }>;
 
   /**
-   * Registers a callback from when the app goes to the background.
-   *
-   * @since 1.0.0
+   * Destroy all resources associated with the audio source.
    */
-  onAppLosesFocus(
-    params: AudioPlayerListenerParams,
-    callback: () => void,
-  ): Promise<AudioPlayerListenerResult>;
+  destroy(params: { audioId: string }): Promise<void>;
 
   /**
-   * Registers a callback for when the audio source is ready to be played.
-   *
-   * @since 1.0.0
+   * Get details about the currently active audio source.
+   */
+  getCurrentAudio(): Promise<CurrentAudio>;
+
+  /**
+   * Register a callback for when the audio source is ready for playback.
    */
   onAudioReady(
-    params: AudioPlayerListenerParams,
+    params: { audioId: string },
     callback: () => void,
-  ): Promise<AudioPlayerListenerResult>;
+  ): Promise<{ callbackId: string }>;
 
   /**
-   * Registers a callback for when the audio source has ended (reached the end of the audio).
-   *
-   * @since 1.0.0
+   * Register a callback for when playback of the audio source ends.
    */
   onAudioEnd(
-    params: AudioPlayerListenerParams,
+    params: { audioId: string },
     callback: () => void,
-  ): Promise<AudioPlayerListenerResult>;
+  ): Promise<{ callbackId: string }>;
 
   /**
-   * Registers a callback for when state of playback for the audio source has changed.
-   * This should be used to update the UI when the notification controls are used to control the playback.
-   *
-   * @since 1.0.0
+   * Register a callback for playback status changes.
    */
-  onPlaybackStatusChange(
-    params: AudioPlayerListenerParams,
-    callback: (result: { status: 'playing' | 'paused' | 'stopped' }) => void,
-  ): Promise<AudioPlayerListenerResult>;
+    onPlaybackStatusChange(
+      callback: (result: { status: "stopped" | "paused" | "playing" }) => void
+    ): Promise<{ callbackId: string }>;
+
+  /**
+   * Register a callback for when the next track is played.
+   */
+  onPlayNext(
+    callback: () => void,
+  ): Promise<{ callbackId: string }>;
+
+  /**
+   * Register a callback for when the previous track is played.
+   */
+  onPlayPrevious(
+    callback: () => void,
+  ): Promise<{ callbackId: string }>;
+
+  /**
+   * Register a callback for seek events.
+   */
+  onSeek(
+    callback: (result: { time: number }) => void,
+  ): Promise<{ callbackId: string }>;
+    
+    /**
+     * Add listeners for events
+     */
+    addListener(
+        eventName: 'onPlayNext' | 'onPlayPrevious' | 'onSeek' | 'onPlaybackStatusChange' | 'onAudioEnd',
+        listenerFunc: (data: any) => void
+      ): Promise<PluginListenerHandle>;
+    
+    /**
+     * Set all audio sources (useful for setting a new playlist without creating a new AudioPlayer)
+     */
+    setAudioSources(options: { audioSources: AudioSource[] }): Promise<void>;
 }
