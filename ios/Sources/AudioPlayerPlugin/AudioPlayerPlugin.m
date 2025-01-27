@@ -27,4 +27,7 @@ CAP_PLUGIN(AudioPlayerPlugin, "AudioPlayer",
     CAP_PLUGIN_METHOD(onPlayNext, CAPPluginReturnCallback);
     CAP_PLUGIN_METHOD(onPlayPrevious, CAPPluginReturnCallback);
     CAP_PLUGIN_METHOD(onSeek, CAPPluginReturnCallback);
+
+    // AirPlay Menu
+    CAP_PLUGIN_METHOD(showAirPlayMenu, CAPPluginReturnPromise);
 )

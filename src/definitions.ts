@@ -106,7 +106,7 @@ export interface AudioPlayerPlugin {
   /**
    * Play an audio source by its ID.
    */
-    play(params?: { audioId?: string | null }): Promise<void>;
+  play(params?: { audioId?: string | null }): Promise<void>;
 
   /**
    * Pause playback of an audio source.
@@ -187,9 +187,9 @@ export interface AudioPlayerPlugin {
   /**
    * Register a callback for playback status changes.
    */
-    onPlaybackStatusChange(
-      callback: (result: { status: "stopped" | "paused" | "playing" }) => void
-    ): Promise<{ callbackId: string }>;
+  onPlaybackStatusChange(
+    callback: (result: { status: "stopped" | "paused" | "playing" }) => void
+  ): Promise<{ callbackId: string }>;
 
   /**
    * Register a callback for when the next track is played.
@@ -211,17 +211,23 @@ export interface AudioPlayerPlugin {
   onSeek(
     callback: (result: { time: number }) => void,
   ): Promise<{ callbackId: string }>;
-    
-    /**
-     * Add listeners for events
-     */
-    addListener(
-        eventName: 'onPlayNext' | 'onPlayPrevious' | 'onSeek' | 'onPlaybackStatusChange' | 'onAudioEnd',
-        listenerFunc: (data: any) => void
-      ): Promise<PluginListenerHandle>;
-    
-    /**
-     * Set all audio sources (useful for setting a new playlist without creating a new AudioPlayer)
-     */
-    setAudioSources(options: { audioSources: AudioSource[] }): Promise<void>;
+
+  /**
+   * Add listeners for events
+   */
+  addListener(
+    eventName: 'onPlayNext' | 'onPlayPrevious' | 'onSeek' | 'onPlaybackStatusChange' | 'onAudioEnd' | 'onAirPlayEnabled',
+    listenerFunc: (data: any) => void
+  ): Promise<PluginListenerHandle>;
+
+  /**
+   * Set all audio sources (useful for setting a new playlist without creating a new AudioPlayer)
+   */
+  setAudioSources(options: { audioSources: AudioSource[] }): Promise<void>;
+
+  /**
+ * Displays the AirPlay menu for streaming audio to AirPlay-compatible devices.
+ * @returns A promise that resolves when the AirPlay menu is successfully displayed.
+ */
+  showAirPlayMenu(): Promise<void>;
 }

@@ -207,9 +207,31 @@ public class AudioPlayerPlugin: CAPPlugin {
         call.resolve(["duration": duration])
     }
     
+    @objc func showAirPlayMenu(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            // Create a temporary MPVolumeView
+            let volumeView = MPVolumeView(frame: .zero)
+            volumeView.showsVolumeSlider = false
+            volumeView.showsRouteButton = true
+
+            // Add the volumeView to the current view hierarchy
+            self.bridge?.viewController?.view.addSubview(volumeView)
+
+            // Simulate a tap on the AirPlay button
+            if let routeButton = volumeView.subviews.first(where: { $0 is UIButton }) as? UIButton {
+                routeButton.sendActions(for: .touchUpInside)
+                call.resolve(["success": true])
+            } else {
+                call.reject("AirPlay menu could not be displayed")
+            }
+
+            // Remove the volumeView after the menu is displayed
+            volumeView.removeFromSuperview()
+        }
+    }
+
     // MARK: - Configure Remote Commands
 
-    
     private func configuredCallbacks() {
         let commandCenter = MPRemoteCommandCenter.shared()
 
@@ -238,8 +260,12 @@ public class AudioPlayerPlugin: CAPPlugin {
             print("Native onAudioEnd should be triggered")
             self.notifyListeners("onAudioEnd", data: [:])
         }
-    }
 
+        audioManager.onAirPlayActiveChange = { isEnabled in
+            print("Native onAirPlayEnabled should be triggered with state: \(isEnabled)")
+            self.notifyListeners("onAirPlayEnabled", data: ["isEnabled": isEnabled])
+        }
+    }
 
     @objc func handleAppToBackground() {
         print("App moved to background")

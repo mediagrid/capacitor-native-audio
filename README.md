@@ -112,8 +112,9 @@ A PNG is recommended with the size of 1024 x 1024px. The same image can be used 
 * [`onPlayNext(...)`](#onplaynext)
 * [`onPlayPrevious(...)`](#onplayprevious)
 * [`onSeek(...)`](#onseek)
-* [`addListener('onPlayNext' | 'onPlayPrevious' | 'onSeek' | 'onPlaybackStatusChange' | 'onAudioEnd', ...)`](#addlisteneronplaynext--onplayprevious--onseek--onplaybackstatuschange--onaudioend-)
+* [`addListener('onPlayNext' | 'onPlayPrevious' | 'onSeek' | 'onPlaybackStatusChange' | 'onAudioEnd' | 'onAirPlayEnabled', ...)`](#addlisteneronplaynext--onplayprevious--onseek--onplaybackstatuschange--onaudioend--onairplayenabled-)
 * [`setAudioSources(...)`](#setaudiosources)
+* [`showAirPlayMenu()`](#showairplaymenu)
 * [Interfaces](#interfaces)
 
 </docgen-index>
@@ -464,18 +465,18 @@ Register a callback for seek events.
 --------------------
 
 
-### addListener('onPlayNext' | 'onPlayPrevious' | 'onSeek' | 'onPlaybackStatusChange' | 'onAudioEnd', ...)
+### addListener('onPlayNext' | 'onPlayPrevious' | 'onSeek' | 'onPlaybackStatusChange' | 'onAudioEnd' | 'onAirPlayEnabled', ...)
 
 ```typescript
-addListener(eventName: 'onPlayNext' | 'onPlayPrevious' | 'onSeek' | 'onPlaybackStatusChange' | 'onAudioEnd', listenerFunc: (data: any) => void) => Promise<PluginListenerHandle>
+addListener(eventName: 'onPlayNext' | 'onPlayPrevious' | 'onSeek' | 'onPlaybackStatusChange' | 'onAudioEnd' | 'onAirPlayEnabled', listenerFunc: (data: any) => void) => Promise<PluginListenerHandle>
 ```
 
 Add listeners for events
 
-| Param              | Type                                                                                                  |
-| ------------------ | ----------------------------------------------------------------------------------------------------- |
-| **`eventName`**    | <code>'onPlayNext' \| 'onPlayPrevious' \| 'onSeek' \| 'onPlaybackStatusChange' \| 'onAudioEnd'</code> |
-| **`listenerFunc`** | <code>(data: any) =&gt; void</code>                                                                   |
+| Param              | Type                                                                                                                        |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| **`eventName`**    | <code>'onPlayNext' \| 'onPlayPrevious' \| 'onSeek' \| 'onPlaybackStatusChange' \| 'onAudioEnd' \| 'onAirPlayEnabled'</code> |
+| **`listenerFunc`** | <code>(data: any) =&gt; void</code>                                                                                         |
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
@@ -493,6 +494,17 @@ Set all audio sources (useful for setting a new playlist without creating a new 
 | Param         | Type                                          |
 | ------------- | --------------------------------------------- |
 | **`options`** | <code>{ audioSources: AudioSource[]; }</code> |
+
+--------------------
+
+
+### showAirPlayMenu()
+
+```typescript
+showAirPlayMenu() => Promise<void>
+```
+
+Displays the AirPlay menu for streaming audio to AirPlay-compatible devices.
 
 --------------------
 

@@ -2,7 +2,7 @@ import { WebPlugin, registerPlugin, PluginListenerHandle } from '@capacitor/core
 import type { AudioPlayerPlugin, AudioSource } from './definitions';
 
 export class AudioPlayerWeb extends WebPlugin implements AudioPlayerPlugin {
-    
+
   create(): Promise<{ success: boolean }> {
     throw this.unimplemented('create is not implemented on web.');
   }
@@ -91,28 +91,28 @@ export class AudioPlayerWeb extends WebPlugin implements AudioPlayerPlugin {
     throw this.unimplemented('playPrevious is not implemented on web.');
   }
 
-    onPlayNext(callback: () => void): Promise<{ callbackId: string }> {
-        console.warn("onPlayNext is not implemented on the web.");
-        return Promise.resolve({ callbackId: 'web-fallback-callback-id' });
-    }
+  onPlayNext(callback: () => void): Promise<{ callbackId: string }> {
+    console.warn("onPlayNext is not implemented on the web.");
+    return Promise.resolve({ callbackId: 'web-fallback-callback-id' });
+  }
 
-    onPlayPrevious(callback: () => void): Promise<{ callbackId: string }> {
-        console.warn("onPlayPrevious is not implemented on the web.");
-        return Promise.resolve({ callbackId: 'web-fallback-callback-id' });
-    }
+  onPlayPrevious(callback: () => void): Promise<{ callbackId: string }> {
+    console.warn("onPlayPrevious is not implemented on the web.");
+    return Promise.resolve({ callbackId: 'web-fallback-callback-id' });
+  }
 
-    onSeek(callback: (result: { time: number }) => void): Promise<{ callbackId: string }> {
-        console.warn("onSeek is not implemented on the web.");
-        callback({ time: 0 }); // Example fallback behavior
-        return Promise.resolve({ callbackId: 'web-fallback-callback-id' });
-    }
+  onSeek(callback: (result: { time: number }) => void): Promise<{ callbackId: string }> {
+    console.warn("onSeek is not implemented on the web.");
+    callback({ time: 0 }); // Example fallback behavior
+    return Promise.resolve({ callbackId: 'web-fallback-callback-id' });
+  }
 
-    onPlaybackStatusChange(
-      callback: (result: { status: "stopped" | "paused" | "playing" }) => void
-    ): Promise<{ callbackId: string }> {
-      console.warn("onPlaybackStatusChange is not implemented on the web.");
-      return Promise.resolve({ callbackId: 'web-fallback-callback-id' });
-    }
+  onPlaybackStatusChange(
+    callback: (result: { status: "stopped" | "paused" | "playing" }) => void
+  ): Promise<{ callbackId: string }> {
+    console.warn("onPlaybackStatusChange is not implemented on the web.");
+    return Promise.resolve({ callbackId: 'web-fallback-callback-id' });
+  }
 
   getCurrentAudio(): Promise<{
     audioId: string;
@@ -137,8 +137,13 @@ export class AudioPlayerWeb extends WebPlugin implements AudioPlayerPlugin {
       isPlaying: false,
     });
   }
-    setAudioSources(_options: { audioSources: AudioSource[] }): Promise<void> {
-        console.warn("setAudioSources is not implemented on web.");
-        return Promise.resolve();
-    }
+  setAudioSources(_options: { audioSources: AudioSource[] }): Promise<void> {
+    console.warn("setAudioSources is not implemented on web.");
+    return Promise.resolve();
+  }
+
+  showAirPlayMenu(): Promise<void> {
+    console.warn("showAirPlayMenu is not supported on the web platform.");
+    return Promise.resolve();
+  }
 }
