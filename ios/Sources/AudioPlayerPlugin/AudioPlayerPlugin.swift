@@ -3,7 +3,31 @@ import Capacitor
 import Foundation
 
 @objc(AudioPlayerPlugin)
-public class AudioPlayerPlugin: CAPPlugin {
+public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "AudioPlayerPlugin"
+    public let jsName = "AudioPlayer"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "create", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "initialize", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "changeAudioSource", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "changeMetadata", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getDuration", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getCurrentTime", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "play", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "pause", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "seek", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "stop", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setVolume", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "setRate", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "isPlaying", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "destroy", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "onAppGainsFocus", returnType: CAPPluginReturnCallback),
+        CAPPluginMethod(name: "onAppLosesFocus", returnType: CAPPluginReturnCallback),
+        CAPPluginMethod(name: "onAudioReady", returnType: CAPPluginReturnCallback),
+        CAPPluginMethod(name: "onAudioEnd", returnType: CAPPluginReturnCallback),
+        CAPPluginMethod(name: "onPlaybackStatusChange", returnType: CAPPluginReturnCallback),
+    ]
+
     let audioSession = AVAudioSession.sharedInstance()
     var audioSources = AudioSources()
     var onGainsFocusCallbackIds: [String: String] = [:]
@@ -79,8 +103,7 @@ public class AudioPlayerPlugin: CAPPlugin {
                 )
             }
 
-            if audioSources.hasNotification() && audioSource.useForNotification
-            {
+            if audioSources.hasNotification() && audioSource.useForNotification {
                 throw AudioPlayerError.runtimeError(
                     "An audio source with useForNotification = true already exists. There can only be one."
                 )
