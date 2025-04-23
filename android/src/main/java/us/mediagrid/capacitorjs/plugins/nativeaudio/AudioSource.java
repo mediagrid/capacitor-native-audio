@@ -95,7 +95,7 @@ public class AudioSource extends Binder {
     }
 
     public void changeMetadata(AudioMetadata metadata) {
-        this.audioMetadata = metadata;
+        this.audioMetadata.update(metadata);
 
         var currentMediaItem = getPlayer().getCurrentMediaItem();
         var newMediaItem = currentMediaItem

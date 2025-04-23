@@ -67,7 +67,9 @@ public class AudioPlayerPlugin extends Plugin {
                     call.getString("albumTitle"),
                     call.getString("artistName"),
                     call.getString("friendlyTitle"),
-                    call.getString("artworkSource")
+                    call.getString("artworkSource"),
+                    call.getString("metadataUpdateUrl"),
+                    call.getInt("metadataUpdateInterval")
                 ),
                 call.getBoolean("useForNotification", false),
                 call.getBoolean("isBackgroundMusic", false),
@@ -244,7 +246,9 @@ public class AudioPlayerPlugin extends Plugin {
                         call.getString("albumTitle"),
                         call.getString("artistName"),
                         call.getString("friendlyTitle"),
-                        call.getString("artworkSource")
+                        call.getString("artworkSource"),
+                        null,
+                        null
                     )
                 );
 
