@@ -21,11 +21,11 @@ public class AudioSource extends Binder {
 
     public String id;
     public String source;
-    public String friendlyTitle;
+    public AudioMetadata audioMetadata;
     public boolean useForNotification;
-    public String artworkSource;
     public boolean isBackgroundMusic;
     public boolean loopAudio = false;
+
     public String onPlaybackStatusChangeCallbackId;
     public String onReadyCallbackId;
     public String onEndCallbackId;
@@ -42,18 +42,16 @@ public class AudioSource extends Binder {
         AudioPlayerPlugin pluginOwner,
         String id,
         String source,
-        String friendlyTitle,
+        AudioMetadata audioMetadata,
         boolean useForNotification,
-        String artworkSource,
         boolean isBackgroundMusic,
         boolean loopAudio
     ) {
         this.pluginOwner = pluginOwner;
         this.id = id;
         this.source = source;
-        this.friendlyTitle = friendlyTitle;
+        this.audioMetadata = audioMetadata;
         this.useForNotification = useForNotification;
-        this.artworkSource = artworkSource;
         this.isBackgroundMusic = isBackgroundMusic;
         this.loopAudio = loopAudio;
     }
@@ -98,14 +96,8 @@ public class AudioSource extends Binder {
         player.prepare();
     }
 
-    public void changeMetadata(String newFriendlyTitle, String newArtworkSource) {
-        if (newFriendlyTitle != null) {
-            friendlyTitle = newFriendlyTitle;
-        }
-
-        if (newArtworkSource != null) {
-            artworkSource = newArtworkSource;
-        }
+    public void changeMetadata(AudioMetadata metadata) {
+        this.audioMetadata = metadata;
 
         var currentMediaItem = getPlayer().getCurrentMediaItem();
         var newMediaItem = currentMediaItem
@@ -247,20 +239,21 @@ public class AudioSource extends Binder {
 
     private MediaMetadata getMediaMetadata() {
         MediaMetadata.Builder builder = new MediaMetadata.Builder()
-            .setArtist("")
-            .setTitle(friendlyTitle);
+            .setAlbumTitle(audioMetadata.albumTitle == null ? "" : audioMetadata.albumTitle)
+            .setArtist(audioMetadata.artistName == null ? "" : audioMetadata.artistName)
+            .setTitle(audioMetadata.songTitle == null ? "" : audioMetadata.songTitle);
 
-        if (useForNotification && artworkSource != null) {
+        if (useForNotification && audioMetadata.artworkSource != null) {
             try {
-                if (artworkSource.startsWith("https:")) {
-                    builder.setArtworkUri(Uri.parse(artworkSource));
+                if (audioMetadata.artworkSource.startsWith("https:")) {
+                    builder.setArtworkUri(Uri.parse(audioMetadata.artworkSource));
                 } else {
                     int bufferLength = 4 * 0x400; // 4KB
                     byte[] buffer = new byte[bufferLength];
                     int readLength;
                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-                    InputStream inputStream = pluginOwner.getContext().getAssets().open("public/" + artworkSource);
+                    InputStream inputStream = pluginOwner.getContext().getAssets().open("public/" + audioMetadata.artworkSource);
 
                     while ((readLength = inputStream.read(buffer, 0, bufferLength)) != -1) {
                         outputStream.write(buffer, 0, readLength);

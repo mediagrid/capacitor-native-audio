@@ -64,9 +64,13 @@ public class AudioPlayerPlugin extends Plugin {
                 this,
                 sourceId,
                 call.getString("audioSource"),
-                call.getString("friendlyTitle"),
+                new AudioMetadata(
+                    call.getString("albumTitle"),
+                    call.getString("artistName"),
+                    call.getString("friendlyTitle"),
+                    call.getString("artworkSource")
+                ),
                 call.getBoolean("useForNotification", false),
-                call.getString("artworkSource"),
                 call.getBoolean("isBackgroundMusic", false),
                 call.getBoolean("loop", false)
             );
@@ -193,8 +197,12 @@ public class AudioPlayerPlugin extends Plugin {
 
             postToLooper("changeMetadata", call, () -> {
                 audioSource.changeMetadata(
-                    call.getString("friendlyTitle"),
-                    call.getString("artworkSource")
+                    new AudioMetadata(
+                        call.getString("albumTitle"),
+                        call.getString("artistName"),
+                        call.getString("friendlyTitle"),
+                        call.getString("artworkSource")
+                    )
                 );
 
                 call.resolve();
