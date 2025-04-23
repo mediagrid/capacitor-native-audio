@@ -1,10 +1,7 @@
 import { CapacitorException } from '@capacitor/core';
 import { AudioPlayer } from '@mediagrid/capacitor-native-audio';
 
-const mainAudioHref = new URL(
-  '/assets/karen_the_news_update.mp3',
-  import.meta.url,
-).href;
+const mainAudioHref = new URL('/assets/karen_the_news_update.mp3', import.meta.url).href;
 const bgAudioHref = new URL('/assets/komiku_bicycle.mp3', import.meta.url).href;
 
 const audioId = generateAudioId();
@@ -20,6 +17,8 @@ async function initialize(): Promise<void> {
   await AudioPlayer.create({
     audioId: audioId,
     audioSource: mainAudioHref,
+    // albumTitle: 'My Album Title',
+    // artistName: 'My Artist',
     friendlyTitle: 'My Test Audio',
     useForNotification: true,
     artworkSource: 'assets/sample_artwork.png',
@@ -28,7 +27,7 @@ async function initialize(): Promise<void> {
     loop: false,
     showSeekForward: true,
     showSeekBackward: true,
-  }).catch(ex => setError(ex));
+  }).catch((ex) => setError(ex));
 
   await AudioPlayer.create({
     audioId: bgAudioId,
@@ -37,15 +36,10 @@ async function initialize(): Promise<void> {
     useForNotification: false,
     isBackgroundMusic: true,
     loop: true,
-  }).catch(ex => setError(ex));
+  }).catch((ex) => setError(ex));
 
   await AudioPlayer.onAudioReady({ audioId: audioId }, async () => {
-    setText(
-      'duration',
-      Math.ceil(
-        (await AudioPlayer.getDuration({ audioId: audioId })).duration,
-      ).toString(),
-    );
+    setText('duration', Math.ceil((await AudioPlayer.getDuration({ audioId: audioId })).duration).toString());
   });
 
   AudioPlayer.onAudioEnd({ audioId: audioId }, async () => {
@@ -53,7 +47,7 @@ async function initialize(): Promise<void> {
     AudioPlayer.stop({ audioId: bgAudioId });
   });
 
-  AudioPlayer.onPlaybackStatusChange({ audioId: audioId }, result => {
+  AudioPlayer.onPlaybackStatusChange({ audioId: audioId }, (result) => {
     setText('status', result.status);
 
     switch (result.status) {
@@ -76,10 +70,8 @@ async function initialize(): Promise<void> {
     }
   });
 
-  await AudioPlayer.initialize({ audioId: audioId }).catch(ex => setError(ex));
-  await AudioPlayer.initialize({ audioId: bgAudioId }).catch(ex =>
-    setError(ex),
-  );
+  await AudioPlayer.initialize({ audioId: audioId }).catch((ex) => setError(ex));
+  await AudioPlayer.initialize({ audioId: bgAudioId }).catch((ex) => setError(ex));
 }
 
 addClickEvent('playButton', async () => {
@@ -105,6 +97,8 @@ addClickEvent('stopButton', () => {
 addClickEvent('changeMetadataButton', () => {
   AudioPlayer.changeMetadata({
     audioId: audioId,
+    // albumTitle: 'A New Album',
+    // artistName: 'A New Artist',
     friendlyTitle: 'A New Title',
     artworkSource: 'assets/sample_artwork_new.png',
     // artworkSource: 'https://placehold.co/1200.jpg',
@@ -126,12 +120,7 @@ function startCurrentPositionUpdate(): void {
   stopCurrentPositionUpdate();
 
   currentPositionIntervalId = window.setInterval(async () => {
-    setText(
-      'currentTime',
-      Math.round(
-        (await AudioPlayer.getCurrentTime({ audioId: audioId })).currentTime,
-      ).toString(),
-    );
+    setText('currentTime', Math.round((await AudioPlayer.getCurrentTime({ audioId: audioId })).currentTime).toString());
   }, 1000);
 }
 

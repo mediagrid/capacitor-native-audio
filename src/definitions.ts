@@ -17,6 +17,20 @@ export interface AudioPlayerPrepareParams extends AudioPlayerDefaultParams {
   audioSource: string;
 
   /**
+   * The album title/name of the audio file to be used on the notification
+   *
+   * @since 2.1.0
+   */
+  albumTitle?: string;
+
+  /**
+   * The artist name of the audio file to be used on the notification
+   *
+   * @since 2.1.0
+   */
+  artistName?: string;
+
+  /**
    * The title/name of the audio file to be used on the notification
    *
    * @since 1.0.0
@@ -127,9 +141,7 @@ export interface AudioPlayerPlugin {
    *
    * @since 1.0.0
    */
-  changeAudioSource(
-    params: AudioPlayerDefaultParams & { source: string },
-  ): Promise<void>;
+  changeAudioSource(params: AudioPlayerDefaultParams & { source: string }): Promise<void>;
 
   /**
    * Change the associated metadata of an existing audio source
@@ -138,6 +150,8 @@ export interface AudioPlayerPlugin {
    */
   changeMetadata(
     params: AudioPlayerDefaultParams & {
+      albumTitle?: string;
+      artistName?: string;
       friendlyTitle?: string;
       artworkSource?: string;
     },
@@ -157,9 +171,7 @@ export interface AudioPlayerPlugin {
    *
    * @since 1.0.0
    */
-  getCurrentTime(
-    params: AudioPlayerDefaultParams,
-  ): Promise<{ currentTime: number }>;
+  getCurrentTime(params: AudioPlayerDefaultParams): Promise<{ currentTime: number }>;
 
   /**
    * Play the audio source.
@@ -180,9 +192,7 @@ export interface AudioPlayerPlugin {
    *
    * @since 1.0.0
    */
-  seek(
-    params: AudioPlayerDefaultParams & { timeInSeconds: number },
-  ): Promise<void>;
+  seek(params: AudioPlayerDefaultParams & { timeInSeconds: number }): Promise<void>;
 
   /**
    * Stop playing the audio source and reset the current time to zero.
@@ -198,9 +208,7 @@ export interface AudioPlayerPlugin {
    *
    * @since 1.0.0
    */
-  setVolume(
-    params: AudioPlayerDefaultParams & { volume: number },
-  ): Promise<void>;
+  setVolume(params: AudioPlayerDefaultParams & { volume: number }): Promise<void>;
 
   /**
    * Set the rate for the audio source to be played at.
@@ -230,40 +238,28 @@ export interface AudioPlayerPlugin {
    *
    * @since 1.0.0
    */
-  onAppGainsFocus(
-    params: AudioPlayerListenerParams,
-    callback: () => void,
-  ): Promise<AudioPlayerListenerResult>;
+  onAppGainsFocus(params: AudioPlayerListenerParams, callback: () => void): Promise<AudioPlayerListenerResult>;
 
   /**
    * Registers a callback from when the app goes to the background.
    *
    * @since 1.0.0
    */
-  onAppLosesFocus(
-    params: AudioPlayerListenerParams,
-    callback: () => void,
-  ): Promise<AudioPlayerListenerResult>;
+  onAppLosesFocus(params: AudioPlayerListenerParams, callback: () => void): Promise<AudioPlayerListenerResult>;
 
   /**
    * Registers a callback for when the audio source is ready to be played.
    *
    * @since 1.0.0
    */
-  onAudioReady(
-    params: AudioPlayerListenerParams,
-    callback: () => void,
-  ): Promise<AudioPlayerListenerResult>;
+  onAudioReady(params: AudioPlayerListenerParams, callback: () => void): Promise<AudioPlayerListenerResult>;
 
   /**
    * Registers a callback for when the audio source has ended (reached the end of the audio).
    *
    * @since 1.0.0
    */
-  onAudioEnd(
-    params: AudioPlayerListenerParams,
-    callback: () => void,
-  ): Promise<AudioPlayerListenerResult>;
+  onAudioEnd(params: AudioPlayerListenerParams, callback: () => void): Promise<AudioPlayerListenerResult>;
 
   /**
    * Registers a callback for when state of playback for the audio source has changed.

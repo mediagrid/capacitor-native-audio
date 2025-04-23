@@ -7,10 +7,10 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
 
     var id: String
     var source: String
-    var friendlyTitle: String
+    var audioMetadata: AudioMetadata
     var useForNotification: Bool
-    var artworkSource: String
     var isBackgroundMusic: Bool
+
     var onPlaybackStatusChangeCallbackId: String = ""
     var onReadyCallbackId: String = ""
     var onEndCallbackId: String = ""
@@ -21,7 +21,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     @objc private var playerQueue: AVQueuePlayer!
     private var playerLooper: AVPlayerLooper!
     private var nowPlayingArtwork: MPMediaItemArtwork?
-    
+
     private var loopAudio: Bool
     private var isPaused: Bool = false
     private var showSeekBackward: Bool
@@ -34,9 +34,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         pluginOwner: AudioPlayerPlugin,
         id: String,
         source: String,
-        friendlyTitle: String,
+        audioMetadata: AudioMetadata,
         useForNotification: Bool,
-        artworkSource: String,
         isBackgroundMusic: Bool,
         loopAudio: Bool,
         showSeekBackward: Bool,
@@ -45,9 +44,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         self.pluginOwner = pluginOwner
         self.id = id
         self.source = source
-        self.friendlyTitle = friendlyTitle
+        self.audioMetadata = audioMetadata
         self.useForNotification = useForNotification
-        self.artworkSource = artworkSource
         self.isBackgroundMusic = isBackgroundMusic
         self.loopAudio = loopAudio
         self.showSeekBackward = showSeekBackward
@@ -61,7 +59,9 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         if loopAudio {
             playerQueue = AVQueuePlayer()
             playerLooper = AVPlayerLooper.init(
-                player: playerQueue, templateItem: playerItem)
+                player: playerQueue,
+                templateItem: playerItem
+            )
             observeAudioReady()
         } else {
             observeAudioReady()
@@ -83,7 +83,9 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         if loopAudio {
             playerQueue.removeAllItems()
             playerLooper = AVPlayerLooper.init(
-                player: playerQueue, templateItem: playerItem)
+                player: playerQueue,
+                templateItem: playerItem
+            )
             observeAudioReady()
         } else {
             observeAudioReady()
@@ -91,15 +93,9 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         }
     }
 
-    func changeMetadata(newFriendlyTitle: String?, newArtworkSource: String?) {
-        if newFriendlyTitle != nil {
-            friendlyTitle = newFriendlyTitle ?? ""
-        }
-
-        if newArtworkSource != nil {
-            artworkSource = newArtworkSource ?? ""
-            nowPlayingArtwork = nil
-        }
+    func changeMetadata(metadata: AudioMetadata) {
+        audioMetadata = metadata
+        nowPlayingArtwork = nil
 
         removeNowPlaying()
         setupNowPlaying()
@@ -288,7 +284,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
                 callbackId: onPlaybackStatusChangeCallbackId,
                 data: [
                     "status": "paused"
-                ])
+                ]
+            )
         }
 
         if type == .ended {
@@ -299,7 +296,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
                 callbackId: onPlaybackStatusChangeCallbackId,
                 data: [
                     "status": "playing"
-                ])
+                ]
+            )
         }
     }
 
@@ -384,7 +382,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
                     callbackId: self.onPlaybackStatusChangeCallbackId,
                     data: [
                         "status": "playing"
-                    ])
+                    ]
+                )
 
                 return .success
             }
@@ -403,7 +402,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
                     callbackId: self.onPlaybackStatusChangeCallbackId,
                     data: [
                         "status": "paused"
-                    ])
+                    ]
+                )
 
                 return .success
             }
@@ -416,7 +416,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
                 [unowned self] event -> MPRemoteCommandHandlerStatus in
                 var seekTime = floor(
                     self.getCurrentTime()
-                        - Double(self.STANDARD_SEEK_IN_SECONDS))
+                        - Double(self.STANDARD_SEEK_IN_SECONDS)
+                )
 
                 if seekTime < 0 {
                     seekTime = 0
@@ -437,7 +438,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
                 [unowned self] event -> MPRemoteCommandHandlerStatus in
                 var seekTime = ceil(
                     self.getCurrentTime()
-                        + Double(self.STANDARD_SEEK_IN_SECONDS))
+                        + Double(self.STANDARD_SEEK_IN_SECONDS)
+                )
                 var duration = floor(self.getDuration())
 
                 duration = duration < 0 ? 0 : duration
@@ -485,7 +487,9 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         let nowPlayingInfoCenter = MPNowPlayingInfoCenter.default()
         var nowPlayingInfo = [String: Any]()
 
-        nowPlayingInfo[MPMediaItemPropertyTitle] = friendlyTitle
+        nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = audioMetadata.albumTitle
+        nowPlayingInfo[MPMediaItemPropertyArtist] = audioMetadata.artistName
+        nowPlayingInfo[MPMediaItemPropertyTitle] = audioMetadata.songTitle
         nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = getDuration()
         nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] =
             getCurrentTime()
@@ -517,7 +521,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
             return nowPlayingArtwork
         }
 
-        if !artworkSource.isEmpty {
+        if !audioMetadata.artworkSource.isEmpty {
             downloadNowPlayingIcon()
         } else {
             if let image = UIImage(named: "NowPlayingIcon") {
@@ -532,8 +536,13 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     }
 
     private func downloadNowPlayingIcon() {
-        guard var artworkSourceUrl = URL.init(string: artworkSource) else {
-            print("Error: artworkSource '" + artworkSource + "' is invalid (1)")
+        guard
+            var artworkSourceUrl = URL.init(string: audioMetadata.artworkSource)
+        else {
+            print(
+                "Error: artworkSource '" + audioMetadata.artworkSource
+                    + "' is invalid (1)"
+            )
             return
         }
 
@@ -548,7 +557,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
             }
 
             artworkSourceUrl = baseAppPathUrl.appendingPathComponent(
-                artworkSourceUrl.absoluteString)
+                artworkSourceUrl.absoluteString
+            )
         }
 
         let task = URLSession.shared.dataTask(
@@ -558,7 +568,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
             else {
                 print(
                     "Error: artworkSource data is invalid - "
-                        + artworkSourceUrl.absoluteString)
+                        + artworkSourceUrl.absoluteString
+                )
                 return
             }
 
@@ -568,7 +579,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
                 ) { _ in image }
                 self.setNowPlayingInfoKey(
                     for: MPMediaItemPropertyArtwork,
-                    value: self.nowPlayingArtwork)
+                    value: self.nowPlayingArtwork
+                )
             }
         }
 
@@ -582,7 +594,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
 
         setNowPlayingInfoKey(
             for: MPNowPlayingInfoPropertyElapsedPlaybackTime,
-            value: getCurrentTime())
+            value: getCurrentTime()
+        )
     }
 
     private func removeNowPlaying() {
