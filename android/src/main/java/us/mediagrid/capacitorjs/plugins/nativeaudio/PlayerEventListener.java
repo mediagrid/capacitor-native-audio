@@ -25,8 +25,8 @@ public class PlayerEventListener implements Listener {
         if (audioSource.isInitialized()) {
             if (
                 audioSource.getPlayer().getPlaybackState() == STATE_READY &&
-                    !audioSource.getPlayer().getPlayWhenReady() &&
-                    !audioSource.isStopped()
+                !audioSource.getPlayer().getPlayWhenReady() &&
+                !audioSource.isStopped()
             ) {
                 status = "paused";
                 audioSource.setIsPaused();
@@ -36,7 +36,10 @@ public class PlayerEventListener implements Listener {
             }
         }
 
-        makeCall(audioSource.onPlaybackStatusChangeCallbackId, new JSObject().put("status", status));
+        makeCall(
+            audioSource.onPlaybackStatusChangeCallbackId,
+            new JSObject().put("status", status)
+        );
     }
 
     @Override

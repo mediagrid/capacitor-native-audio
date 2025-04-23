@@ -9,22 +9,10 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "create", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "initialize", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(
-            name: "changeAudioSource",
-            returnType: CAPPluginReturnPromise
-        ),
-        CAPPluginMethod(
-            name: "changeMetadata",
-            returnType: CAPPluginReturnPromise
-        ),
-        CAPPluginMethod(
-            name: "getDuration",
-            returnType: CAPPluginReturnPromise
-        ),
-        CAPPluginMethod(
-            name: "getCurrentTime",
-            returnType: CAPPluginReturnPromise
-        ),
+        CAPPluginMethod(name: "changeAudioSource", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "changeMetadata", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getDuration", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getCurrentTime", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "play", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "pause", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "seek", returnType: CAPPluginReturnPromise),
@@ -33,26 +21,11 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "setRate", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "isPlaying", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "destroy", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(
-            name: "onAppGainsFocus",
-            returnType: CAPPluginReturnCallback
-        ),
-        CAPPluginMethod(
-            name: "onAppLosesFocus",
-            returnType: CAPPluginReturnCallback
-        ),
-        CAPPluginMethod(
-            name: "onAudioReady",
-            returnType: CAPPluginReturnCallback
-        ),
-        CAPPluginMethod(
-            name: "onAudioEnd",
-            returnType: CAPPluginReturnCallback
-        ),
-        CAPPluginMethod(
-            name: "onPlaybackStatusChange",
-            returnType: CAPPluginReturnCallback
-        ),
+        CAPPluginMethod(name: "onAppGainsFocus", returnType: CAPPluginReturnCallback),
+        CAPPluginMethod(name: "onAppLosesFocus", returnType: CAPPluginReturnCallback),
+        CAPPluginMethod(name: "onAudioReady", returnType: CAPPluginReturnCallback),
+        CAPPluginMethod(name: "onAudioEnd", returnType: CAPPluginReturnCallback),
+        CAPPluginMethod(name: "onPlaybackStatusChange", returnType: CAPPluginReturnCallback)
     ]
 
     let audioSession = AVAudioSession.sharedInstance()
@@ -134,8 +107,7 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
                 )
             }
 
-            if audioSources.hasNotification() && audioSource.useForNotification
-            {
+            if audioSources.hasNotification() && audioSource.useForNotification {
                 throw AudioPlayerError.runtimeError(
                     "An audio source with useForNotification = true already exists. There can only be one."
                 )
@@ -522,8 +494,7 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     func getAudioSource(methodName: String, call: CAPPluginCall) throws
-        -> AudioSource
-    {
+    -> AudioSource {
         return try getAudioSource(
             methodName: methodName,
             call: call,

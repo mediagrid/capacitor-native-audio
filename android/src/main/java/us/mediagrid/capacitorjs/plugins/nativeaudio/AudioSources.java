@@ -1,14 +1,13 @@
 package us.mediagrid.capacitorjs.plugins.nativeaudio;
 
 import android.os.Binder;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
 import us.mediagrid.capacitorjs.plugins.nativeaudio.exceptions.AudioSourceAlreadyExistsException;
 
 public class AudioSources extends Binder {
+
     private HashMap<String, AudioSource> audioSources = new HashMap<>();
 
     public AudioSource get(String sourceId) {
@@ -61,7 +60,6 @@ public class AudioSources extends Binder {
 
     public void destroyAllNonNotificationSources() {
         List<AudioSource> sourcesToRemove = new ArrayList<>();
-
 
         for (AudioSource audioSource : audioSources.values()) {
             if (audioSource.useForNotification) {

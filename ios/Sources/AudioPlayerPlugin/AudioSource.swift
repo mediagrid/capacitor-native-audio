@@ -215,15 +215,15 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         if loopAudio {
             return playerQueue.rate > 0
                 || playerQueue.timeControlStatus
-                    == AVPlayer.TimeControlStatus.playing
+                == AVPlayer.TimeControlStatus.playing
                 || playerQueue.timeControlStatus
-                    == AVPlayer.TimeControlStatus.waitingToPlayAtSpecifiedRate
+                == AVPlayer.TimeControlStatus.waitingToPlayAtSpecifiedRate
         }
 
         return player.rate > 0
             || player.timeControlStatus == AVPlayer.TimeControlStatus.playing
             || player.timeControlStatus
-                == AVPlayer.TimeControlStatus.waitingToPlayAtSpecifiedRate
+            == AVPlayer.TimeControlStatus.waitingToPlayAtSpecifiedRate
     }
 
     func destroy() {
@@ -269,9 +269,9 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
 
     @objc private func handleInterruption(notification: Notification) {
         guard let userInfo = notification.userInfo,
-            let typeValue = userInfo[AVAudioSessionInterruptionTypeKey]
+              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey]
                 as? UInt,
-            let type = AVAudioSession.InterruptionType(rawValue: typeValue)
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue)
         else {
             return
         }
@@ -309,10 +309,9 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         if loopAudio {
             audioReadyObservation = observe(
                 \.playerQueue?.currentItem?.status
-            ) { object, change in
+            ) { _, _ in
                 if self.playerQueue.currentItem?.status
-                    == AVPlayerItem.Status.readyToPlay
-                {
+                    == AVPlayerItem.Status.readyToPlay {
                     self.makePluginCall(callbackId: self.onReadyCallbackId)
                     self.observeOnEnd()
                 }
@@ -320,7 +319,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         } else {
             audioReadyObservation = observe(
                 \.playerItem?.status
-            ) { object, change in
+            ) { _, _ in
                 if self.playerItem.status == AVPlayerItem.Status.readyToPlay {
                     self.makePluginCall(callbackId: self.onReadyCallbackId)
                     self.observeOnEnd()
@@ -374,7 +373,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         let commandCenter = MPRemoteCommandCenter.shared()
 
         commandCenter.playCommand.addTarget {
-            [unowned self] event -> MPRemoteCommandHandlerStatus in
+            [unowned self] _ -> MPRemoteCommandHandlerStatus in
             if !self.isPlaying() {
                 self.play()
 
@@ -392,7 +391,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         }
 
         commandCenter.pauseCommand.addTarget {
-            [unowned self] event -> MPRemoteCommandHandlerStatus in
+            [unowned self] _ -> MPRemoteCommandHandlerStatus in
             print("Pause rate: " + String(self.player.rate))
 
             if self.isPlaying() {
@@ -413,7 +412,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
 
         if showSeekBackward {
             commandCenter.skipBackwardCommand.addTarget {
-                [unowned self] event -> MPRemoteCommandHandlerStatus in
+                [unowned self] _ -> MPRemoteCommandHandlerStatus in
                 var seekTime = floor(
                     self.getCurrentTime()
                         - Double(self.STANDARD_SEEK_IN_SECONDS)
@@ -435,7 +434,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
 
         if showSeekForward {
             commandCenter.skipForwardCommand.addTarget {
-                [unowned self] event -> MPRemoteCommandHandlerStatus in
+                [unowned self] _ -> MPRemoteCommandHandlerStatus in
                 var seekTime = ceil(
                     self.getCurrentTime()
                         + Double(self.STANDARD_SEEK_IN_SECONDS)
@@ -526,7 +525,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         } else {
             if let image = UIImage(named: "NowPlayingIcon") {
                 nowPlayingArtwork = MPMediaItemArtwork(boundsSize: image.size) {
-                    size in
+                    _ in
                     return image
                 }
             }
@@ -622,8 +621,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         makePluginCall(callbackId: callbackId, data: [:])
     }
 
-    private func makePluginCall(callbackId: String, data: PluginCallResultData)
-    {
+    private func makePluginCall(callbackId: String, data: PluginCallResultData) {
         if callbackId == "" {
             return
         }

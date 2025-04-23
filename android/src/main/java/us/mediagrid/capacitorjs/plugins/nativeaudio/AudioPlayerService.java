@@ -3,7 +3,6 @@ package us.mediagrid.capacitorjs.plugins.nativeaudio;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
-
 import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
 import androidx.media3.common.AudioAttributes;

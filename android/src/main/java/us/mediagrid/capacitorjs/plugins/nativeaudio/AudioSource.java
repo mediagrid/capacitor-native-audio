@@ -4,14 +4,12 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Binder;
 import android.util.Log;
-
+import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
-import androidx.media3.common.Player;
-import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.MediaMetadata;
-import androidx.media3.common.AudioAttributes;
-
+import androidx.media3.common.Player;
+import androidx.media3.exoplayer.ExoPlayer;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
@@ -63,9 +61,7 @@ public class AudioSource extends Binder {
 
         setIsStopped();
 
-        player = new ExoPlayer.Builder(context)
-            .setWakeMode(C.WAKE_MODE_NETWORK)
-            .build();
+        player = new ExoPlayer.Builder(context).setWakeMode(C.WAKE_MODE_NETWORK).build();
         setPlayerAttributes();
 
         player.prepare();
@@ -75,7 +71,9 @@ public class AudioSource extends Binder {
         player.setAudioAttributes(
             new AudioAttributes.Builder()
                 .setUsage(C.USAGE_MEDIA)
-                .setContentType(useForNotification ? C.AUDIO_CONTENT_TYPE_SPEECH : C.AUDIO_CONTENT_TYPE_MUSIC)
+                .setContentType(
+                    useForNotification ? C.AUDIO_CONTENT_TYPE_SPEECH : C.AUDIO_CONTENT_TYPE_MUSIC
+                )
                 .build(),
             useForNotification
         );
@@ -231,10 +229,7 @@ public class AudioSource extends Binder {
     }
 
     public MediaItem buildMediaItem() {
-        return new MediaItem.Builder()
-            .setMediaMetadata(getMediaMetadata())
-            .setUri(source)
-            .build();
+        return new MediaItem.Builder().setMediaMetadata(getMediaMetadata()).setUri(source).build();
     }
 
     private MediaMetadata getMediaMetadata() {
@@ -253,7 +248,10 @@ public class AudioSource extends Binder {
                     int readLength;
                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-                    InputStream inputStream = pluginOwner.getContext().getAssets().open("public/" + audioMetadata.artworkSource);
+                    InputStream inputStream = pluginOwner
+                        .getContext()
+                        .getAssets()
+                        .open("public/" + audioMetadata.artworkSource);
 
                     while ((readLength = inputStream.read(buffer, 0, bufferLength)) != -1) {
                         outputStream.write(buffer, 0, readLength);
@@ -261,7 +259,10 @@ public class AudioSource extends Binder {
 
                     inputStream.close();
 
-                    builder.maybeSetArtworkData(outputStream.toByteArray(), MediaMetadata.PICTURE_TYPE_OTHER);
+                    builder.maybeSetArtworkData(
+                        outputStream.toByteArray(),
+                        MediaMetadata.PICTURE_TYPE_OTHER
+                    );
                 }
             } catch (Exception ex) {
                 Log.w(TAG, "Could not load the artwork source.", ex);
