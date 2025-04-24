@@ -30,9 +30,11 @@ public class PlayerEventListener implements Listener {
             ) {
                 status = "paused";
                 audioSource.setIsPaused();
+                audioSource.audioMetadata.stopUpdater();
             } else if (isPlaying || audioSource.isPlaying()) {
                 status = "playing";
                 audioSource.setIsPlaying();
+                audioSource.audioMetadata.startUpdater();
             }
         }
 
@@ -52,6 +54,7 @@ public class PlayerEventListener implements Listener {
             audioSource.getPlayer().stop();
             audioSource.getPlayer().seekToDefaultPosition();
             audioSource.setIsStopped();
+            audioSource.audioMetadata.stopUpdater();
 
             makeCall(audioSource.onEndCallbackId);
         }

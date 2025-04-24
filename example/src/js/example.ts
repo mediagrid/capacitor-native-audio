@@ -27,8 +27,8 @@ async function initialize(): Promise<void> {
         loop: false,
         showSeekForward: true,
         showSeekBackward: true,
-        metadataUpdateUrl: 'https://pfd4e5xj5qvsvsdcghre2222vm0pvhsj.lambda-url.us-east-2.on.aws',
-        metadataUpdateInterval: 5,
+        // metadataUpdateUrl: 'https://pfd4e5xj5qvsvsdcghre2222vm0pvhsj.lambda-url.us-east-2.on.aws',
+        // metadataUpdateInterval: 30,
     }).catch(ex => setError(ex));
 
     await AudioPlayer.create({

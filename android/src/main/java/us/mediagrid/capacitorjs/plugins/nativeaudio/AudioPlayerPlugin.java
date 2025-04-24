@@ -21,12 +21,15 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import us.mediagrid.capacitorjs.plugins.nativeaudio.exceptions.DestroyNotAllowedException;
 
 @CapacitorPlugin(name = "AudioPlayer")
 public class AudioPlayerPlugin extends Plugin {
 
     private static final String TAG = "AudioPlayerPlugin";
+    public final ExecutorService executorService = Executors.newCachedThreadPool();
 
     private ListenableFuture<MediaController> audioMediaControllerFuture;
     private MediaController audioMediaController;
@@ -526,6 +529,7 @@ public class AudioPlayerPlugin extends Plugin {
         Log.i(TAG, "Handling onDestroy");
 
         releaseMediaController();
+        executorService.shutdownNow();
 
         super.handleOnDestroy();
     }
