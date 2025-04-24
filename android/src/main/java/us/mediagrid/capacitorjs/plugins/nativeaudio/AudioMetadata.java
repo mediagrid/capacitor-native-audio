@@ -8,9 +8,6 @@ import com.getcapacitor.plugin.util.HttpRequestHandler;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import org.json.JSONObject;
 
 public class AudioMetadata {
 
