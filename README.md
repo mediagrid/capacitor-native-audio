@@ -98,6 +98,8 @@ The URL shall return a JSON response with the following format:
 }
 ```
 
+The update interval starts when the audio is played or un-paused and stops when paused, stopped or the audio ends.
+
 # API
 
 <docgen-index>
