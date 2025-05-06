@@ -2,7 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/mediagrid/capacitor-native-audio/compare/v2.0.0...HEAD)
+## [Unreleased](https://github.com/mediagrid/capacitor-native-audio/compare/v2.1.0...HEAD)
+
+## [v2.1.0](https://github.com/mediagrid/capacitor-native-audio/compare/v2.0.0...v2.1.0) - 2025-05-06
+
+### What's Changed
+
+* feat: Add album title and artist name by @wsamoht in https://github.com/mediagrid/capacitor-native-audio/pull/24
+* Bump Android Media3 library to v1.6.1 in [e62d224b](https://github.com/mediagrid/capacitor-native-audio/commit/e62d224b858e0807bd6f778ca69eb3f9cdd46664)
+
+**Possible breaking change**
+
+When calling `changeMetadata()`, any params not sent will now explicitly be set to an empty value. Before we didn't touch them.
+
+**Full Changelog**: https://github.com/mediagrid/capacitor-native-audio/compare/v2.0.0...v2.1.0
 
 ## [v2.0.0](https://github.com/mediagrid/capacitor-native-audio/compare/v1.2.0...v2.0.0) - 2025-02-11
 
