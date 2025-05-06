@@ -8,6 +8,7 @@ import com.getcapacitor.plugin.util.HttpRequestHandler;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.concurrent.Future;
 
 public class AudioMetadata {
 
@@ -75,7 +76,15 @@ public class AudioMetadata {
         updateRunner = new Runnable() {
             @Override
             public void run() {
-                makeUpdateRequest();
+                var requestTask = makeUpdateRequest();
+
+                if (requestTask != null) {
+                    try {
+                        requestTask.get();
+                    } catch (Exception ex) {
+                        Log.e(TAG, "There was an error running the metadata update", ex);
+                    }
+                }
 
                 if (updateCallback != null) {
                     updateCallback.run();
@@ -100,11 +109,11 @@ public class AudioMetadata {
         updateRunner = null;
     }
 
-    private boolean hasUpdateUrl() {
+    public boolean hasUpdateUrl() {
         return updateUrl != null && updateUrl != "";
     }
 
-    private void makeUpdateRequest() {
+    private Future makeUpdateRequest() {
         Runnable asyncHttpCall = new Runnable() {
             @Override
             public void run() {
@@ -132,6 +141,8 @@ public class AudioMetadata {
                             HttpRequestHandler.readStreamAsString(urlConnection.getInputStream())
                         );
 
+                        Log.i(TAG, json.toString());
+
                         albumTitle = json.getString("album_title");
                         artistName = json.getString("artist_name");
                         songTitle = json.getString("song_title");
@@ -148,7 +159,9 @@ public class AudioMetadata {
         };
 
         if (!pluginOwner.executorService.isShutdown()) {
-            pluginOwner.executorService.submit(asyncHttpCall);
+            return pluginOwner.executorService.submit(asyncHttpCall);
         }
+
+        return null;
     }
 }
