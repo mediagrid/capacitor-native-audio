@@ -1,6 +1,6 @@
 {
   "name": "@sounds/capacitor-native-audio",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Play audio in a Capacitor app natively from a URL/web source simultaneously with background audio.",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",

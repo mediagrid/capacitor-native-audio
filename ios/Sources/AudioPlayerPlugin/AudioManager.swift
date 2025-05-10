@@ -397,7 +397,7 @@ public class AudioManager {
                 let imageData = Data(base64Encoded: dataString),
                 let image = UIImage(data: imageData)
             else {
-                print("Failed to decode base64 image data")å
+                print("Failed to decode base64 image data")
                 completion(nil)
                 return
             }
@@ -405,6 +405,24 @@ public class AudioManager {
             let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
             completion(artwork)
             print("Artwork loaded from base64 image data")
+        } else if source.starts(with: "file://") {
+            // Local File Path Handling
+            let fileURL = URL(fileURLWithPath: source.replacingOccurrences(of: "file://", with: ""))
+            do {
+                let imageData = try Data(contentsOf: fileURL)
+                if let image = UIImage(data: imageData) {
+                    let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+                    completion(artwork)
+                    print("Artwork loaded from local file path")
+                    return
+                } else {
+                    print("Failed to create image from local file")
+                    completion(nil)
+                }
+            } catch {
+                print("Error loading local file: \(error)")
+                completion(nil)
+            }
         } else if let url = URL(string: source) {
             // URL-based Image Handling
             URLSession.shared.dataTask(with: url) { data, _, error in
