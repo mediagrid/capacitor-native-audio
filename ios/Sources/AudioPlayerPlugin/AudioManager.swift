@@ -355,10 +355,8 @@ public class AudioManager {
         nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = audioSource.albumTitle
 
         // Fetch and set artwork if available
-        if let artworkSource = audioSource.artworkSource,
-            let artworkUrl = URL(string: artworkSource)
-        {
-            fetchArtwork(from: artworkUrl) { artwork in
+        if let artworkSource = audioSource.artworkSource {
+            fetchArtwork(from: artworkSource) { artwork in
                 if let artwork = artwork {
                     nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
                     DispatchQueue.main.async {
