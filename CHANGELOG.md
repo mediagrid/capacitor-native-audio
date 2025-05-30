@@ -8,11 +8,7 @@ All notable changes to this project will be documented in this file.
 
 ### What's Changed
 
-* fix: Android - duration and currentTime returning long instead of float by @mevatron in https://github.com/mediagrid/capacitor-native-audio/pull/30
-
-### New Contributors
-
-* @mevatron made their first contribution in https://github.com/mediagrid/capacitor-native-audio/pull/30
+- fix: Android - duration and currentTime returning long instead of float by @mevatron in https://github.com/mediagrid/capacitor-native-audio/pull/30
 
 **Full Changelog**: https://github.com/mediagrid/capacitor-native-audio/compare/v2.1.0...v2.1.1
 
@@ -20,8 +16,8 @@ All notable changes to this project will be documented in this file.
 
 ### What's Changed
 
-* feat: Add album title and artist name by @wsamoht in https://github.com/mediagrid/capacitor-native-audio/pull/24
-* Bump Android Media3 library to v1.6.1 in [e62d224b](https://github.com/mediagrid/capacitor-native-audio/commit/e62d224b858e0807bd6f778ca69eb3f9cdd46664)
+- feat: Add album title and artist name by @wsamoht in https://github.com/mediagrid/capacitor-native-audio/pull/24
+- Bump Android Media3 library to v1.6.1 in [e62d224b](https://github.com/mediagrid/capacitor-native-audio/commit/e62d224b858e0807bd6f778ca69eb3f9cdd46664)
 
 **Possible breaking change**
 
@@ -33,8 +29,8 @@ When calling `changeMetadata()`, any params not sent will now explicitly be set 
 
 ### What's Changed
 
-* Support Capacitor 7 by @wsamoht in https://github.com/mediagrid/capacitor-native-audio/pull/22
-* Bump Android Media3 library to [v1.5.1](https://github.com/androidx/media/releases/tag/1.5.1) @wsamoht in [b626813](https://github.com/mediagrid/capacitor-native-audio/commit/b6268139283fb62f463c78d69bcce484fede8e9f)
+- Support Capacitor 7 by @wsamoht in https://github.com/mediagrid/capacitor-native-audio/pull/22
+- Bump Android Media3 library to [v1.5.1](https://github.com/androidx/media/releases/tag/1.5.1) @wsamoht in [b626813](https://github.com/mediagrid/capacitor-native-audio/commit/b6268139283fb62f463c78d69bcce484fede8e9f)
 
 **Full Changelog**: https://github.com/mediagrid/capacitor-native-audio/compare/v1.2.0...v2.0.0
 
