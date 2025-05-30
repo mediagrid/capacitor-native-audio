@@ -2,7 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/mediagrid/capacitor-native-audio/compare/v2.1.0...HEAD)
+## [Unreleased](https://github.com/mediagrid/capacitor-native-audio/compare/v2.1.1...HEAD)
+
+## [v2.1.1](https://github.com/mediagrid/capacitor-native-audio/compare/v2.1.0...v2.1.1) - 2025-05-30
+
+### What's Changed
+
+* fix: Android - duration and currentTime returning long instead of float by @mevatron in https://github.com/mediagrid/capacitor-native-audio/pull/30
+
+### New Contributors
+
+* @mevatron made their first contribution in https://github.com/mediagrid/capacitor-native-audio/pull/30
+
+**Full Changelog**: https://github.com/mediagrid/capacitor-native-audio/compare/v2.1.0...v2.1.1
 
 ## [v2.1.0](https://github.com/mediagrid/capacitor-native-audio/compare/v2.0.0...v2.1.0) - 2025-05-06
 
