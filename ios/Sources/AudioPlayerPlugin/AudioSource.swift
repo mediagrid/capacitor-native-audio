@@ -51,7 +51,11 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         self.showSeekBackward = showSeekBackward
         self.showSeekForward = showSeekForward
 
-        self.audioMetadata.setPluginOwner(pluginOwner: pluginOwner)
+        super.init()
+
+        self.audioMetadata.setPluginOwner(pluginOwner: pluginOwner).setUpdateCallback(
+            callback: self.updateMetadata
+        )
     }
 
     func initialize() throws {
@@ -571,7 +575,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
             )
         }
 
-        let task = URLSession.shared.dataTask(
+        URLSession.shared.dataTask(
             with: artworkSourceUrl
         ) { data, _, _ in
             guard let imageData = data, let image = UIImage(data: imageData)
@@ -592,9 +596,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
                     value: self.nowPlayingArtwork
                 )
             }
-        }
-
-        task.resume()
+        }.resume()
     }
 
     private func setNowPlayingCurrentTime() {
