@@ -92,7 +92,9 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
                     albumTitle: call.getString("albumTitle", ""),
                     artistName: call.getString("artistName", ""),
                     songTitle: friendlyTitle,
-                    artworkSource: call.getString("artworkSource", "")
+                    artworkSource: call.getString("artworkSource", ""),
+                    updateUrl: call.getString("metadataUpdateUrl", ""),
+                    updateInterval: call.getInt("metadataUpdateInterval", -1)
                 ),
                 useForNotification: call.getBool("useForNotification", false),
                 isBackgroundMusic: call.getBool("isBackgroundMusic", false),
@@ -171,7 +173,9 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
                         albumTitle: call.getString("albumTitle", ""),
                         artistName: call.getString("artistName", ""),
                         songTitle: call.getString("friendlyTitle", ""),
-                        artworkSource: call.getString("artworkSource", "")
+                        artworkSource: call.getString("artworkSource", ""),
+                        updateUrl: "",
+                        updateInterval: -1
                     )
                 )
 
