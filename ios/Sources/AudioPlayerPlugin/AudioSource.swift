@@ -279,25 +279,11 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         if type == .began {
             print("Audio interruption has begun")
             pause()
-
-            makePluginCall(
-                callbackId: onPlaybackStatusChangeCallbackId,
-                data: [
-                    "status": "paused"
-                ]
-            )
         }
 
         if type == .ended {
             print("Audio interruption has ended")
             play()
-
-            makePluginCall(
-                callbackId: onPlaybackStatusChangeCallbackId,
-                data: [
-                    "status": "playing"
-                ]
-            )
         }
     }
 
@@ -376,17 +362,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
             [unowned self] _ -> MPRemoteCommandHandlerStatus in
             if !self.isPlaying() {
                 self.play()
-
-                self.makePluginCall(
-                    callbackId: self.onPlaybackStatusChangeCallbackId,
-                    data: [
-                        "status": "playing"
-                    ]
-                )
-
                 return .success
             }
-
             return .commandFailed
         }
 
@@ -396,17 +373,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
 
             if self.isPlaying() {
                 self.pause()
-
-                self.makePluginCall(
-                    callbackId: self.onPlaybackStatusChangeCallbackId,
-                    data: [
-                        "status": "paused"
-                    ]
-                )
-
                 return .success
             }
-
             return .commandFailed
         }
 
@@ -606,11 +574,30 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     }
 
     private func setNowPlayingPlaybackState(state: MPNowPlayingPlaybackState) {
-        if !useForNotification {
-            return
+        if useForNotification {
+            MPNowPlayingInfoCenter.default().playbackState = state
         }
 
-        MPNowPlayingInfoCenter.default().playbackState = state
+        let newPluginStatus: String?
+        switch state {
+        case .playing:
+            newPluginStatus = "playing"
+        case .paused:
+            newPluginStatus = "paused"
+        case .stopped:
+            newPluginStatus = "stopped"
+        default:
+            newPluginStatus = "stopped" // this shouldn't happen
+        }
+
+        if let pluginStatus = newPluginStatus {
+            makePluginCall(
+                callbackId: onPlaybackStatusChangeCallbackId,
+                data: [
+                    "status": pluginStatus
+                ]
+            )
+        }
     }
 
     private func getCmTime(seconds: Int64) -> CMTime {
