@@ -459,8 +459,13 @@ Registers a callback for when the audio source has ended (reached the end of the
 onPlaybackStatusChange(params: AudioPlayerListenerParams, callback: (result: { status: 'playing' | 'paused' | 'stopped'; }) => void) => Promise<AudioPlayerListenerResult>
 ```
 
-Registers a callback for when state of playback for the audio source has changed.
-This should be used to update the UI when the notification controls are used to control the playback.
+Registers a callback for when state of playback for the audio source has changed by external controls.
+This should be used to update your UI when the notification/external controls are used to control the playback.
+
+On Android, this also gets fired when your app changes the state (e.g. by calling `play`, `pause` or `stop`)
+due to a limitation of not knowing where the state change came from, either the app or the `MediaSession` (external controls).
+
+It may be fixed in the future for Android if a solution is found so don't rely on it when your app itself changes the state.
 
 | Param          | Type                                                                              |
 | -------------- | --------------------------------------------------------------------------------- |
