@@ -100,6 +100,23 @@ export interface AudioPlayerPrepareParams extends AudioPlayerDefaultParams {
      * @since 1.2.0
      */
     showSeekForward?: boolean;
+
+    /**
+     * The URL to fetch metadata updates at the specified interval. Typically used for a radio stream.
+     * See the section on [Metadata Updates](#metadata-updates) for more info.
+     * Only has affect when `useForNotification = true`.
+     *
+     * @since 2.1.0
+     */
+    metadataUpdateUrl?: string;
+
+    /**
+     * The interval to fetch metadata updates in seconds.
+     *
+     * @default 15
+     * @since 2.1.0
+     */
+    metadataUpdateInterval?: number;
 }
 
 export interface AudioPlayerListenerParams {
