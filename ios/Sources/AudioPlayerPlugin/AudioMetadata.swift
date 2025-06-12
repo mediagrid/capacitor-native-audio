@@ -1,3 +1,5 @@
+import Capacitor
+
 public class AudioMetadata {
     var albumTitle: String
     var artistName: String
@@ -54,8 +56,10 @@ public class AudioMetadata {
             return
         }
 
+        print("Starting metadata updater...")
+
         guard
-            var updateUrl = URL.init(string: self.updateUrl)
+            let updateUrl = URL.init(string: self.updateUrl)
         else {
             print("Update metadata URL is invalid")
             return
@@ -73,25 +77,50 @@ public class AudioMetadata {
             leeway: .milliseconds(250)
         )
         updateHandler.setEventHandler {
-            URLSession.shared.dataTask(with: updateRequest) { (_, response, error) in
+            print("Getting metadata from URL \(self.updateUrl)")
+
+            URLSession.shared.dataTask(with: updateRequest) { (data, response, error) in
                 if let error = error {
                     print(error)
-
                     return
                 }
 
-                guard let httpResponse = response as? HTTPURLResponse,
-                      (200...299).contains(httpResponse.statusCode) else {
-                    print("The metadata update server returned a non 200-299 status code")
-
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    print("The metadata update server response is invalid")
                     return
+                }
+
+                guard (200...299).contains(httpResponse.statusCode) else {
+                    print(
+                        "The metadata update server returned a non-2xx status code: \(httpResponse.statusCode)"
+                    )
+                    return
+                }
+
+                do {
+                    guard
+                        let json = (try JSONSerialization.jsonObject(with: data!)) as? [String: Any]
+                    else {
+                        print("The metdata update data could not be parsed as JSON")
+                        return
+                    }
+                    print(json)
+
+                    self.albumTitle = json["album_title"] as? String ?? ""
+                    self.artistName = json["artist_name"] as? String ?? ""
+                    self.songTitle = json["song_title"] as? String ?? ""
+                    self.artworkSource = json["artwork_source"] as? String ?? ""
+                } catch {
+                    print(
+                        "An error ocurred trying to get updated metadata: \(error.localizedDescription)"
+                    )
                 }
 
                 self.updateCallback?()
-            }
+            }.resume()
         }
 
-        updateHandler.resume()
+        updateHandler.activate()
     }
 
     public func stopUpdater() {
