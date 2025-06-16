@@ -76,20 +76,7 @@ public class AudioMetadata {
         updateRunner = new Runnable() {
             @Override
             public void run() {
-                var requestTask = makeUpdateRequest();
-
-                if (requestTask != null) {
-                    try {
-                        requestTask.get();
-                    } catch (Exception ex) {
-                        Log.e(TAG, "There was an error running the metadata update", ex);
-                    }
-                }
-
-                if (updateCallback != null) {
-                    updateCallback.run();
-                }
-
+                updateMetadataByUrl();
                 updateHandler.postDelayed(this, updateInterval * 1000);
             }
         };
@@ -111,6 +98,22 @@ public class AudioMetadata {
 
     public boolean hasUpdateUrl() {
         return updateUrl != null && updateUrl != "";
+    }
+
+    public void updateMetadataByUrl() {
+        var requestTask = makeUpdateRequest();
+
+        if (requestTask != null) {
+            try {
+                requestTask.get();
+            } catch (Exception ex) {
+                Log.e(TAG, "There was an error running the metadata update", ex);
+            }
+        }
+
+        if (updateCallback != null) {
+            updateCallback.run();
+        }
     }
 
     private Future makeUpdateRequest() {
