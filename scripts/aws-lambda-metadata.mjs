@@ -158,9 +158,20 @@ export const handler = async event => {
         },
     ];
 
+    const otherData = {
+        other_data_number: Math.floor(Math.random() * 1000000),
+        other_data_text: crypto.randomUUID(),
+    };
+
+    let body = metadata[Math.floor(Math.random() * metadata.length)];
+
+    if (event.queryStringParameters?.includeOtherData === '1') {
+        body = { ...body, ...otherData };
+    }
+
     const response = {
         statusCode: 200,
-        body: metadata[Math.floor(Math.random() * metadata.length)],
+        body: body,
     };
 
     return response;

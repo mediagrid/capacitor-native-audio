@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import com.getcapacitor.JSObject;
+import com.getcapacitor.PluginCall;
 import com.getcapacitor.plugin.util.HttpRequestHandler;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -21,9 +22,12 @@ public class AudioMetadata {
     public String updateUrl;
     public Integer updateInterval = 15;
 
+    public String onMetadataUpdateCallbackId;
+
     private Handler updateHandler = null;
     private Runnable updateRunner = null;
     private Runnable updateCallback = null;
+    private JSObject updateFullResponse;
 
     private AudioPlayerPlugin pluginOwner;
 
@@ -114,6 +118,14 @@ public class AudioMetadata {
         if (updateCallback != null) {
             updateCallback.run();
         }
+
+        if (onMetadataUpdateCallbackId != null) {
+            PluginCall call = pluginOwner.getBridge().getSavedCall(onMetadataUpdateCallbackId);
+
+            if (call != null) {
+                call.resolve(updateFullResponse);
+            }
+        }
     }
 
     private Future makeUpdateRequest() {
@@ -146,6 +158,7 @@ public class AudioMetadata {
 
                         Log.i(TAG, json.toString());
 
+                        updateFullResponse = json;
                         albumTitle = json.getString("album_title");
                         artistName = json.getString("artist_name");
                         songTitle = json.getString("song_title");
