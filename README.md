@@ -108,6 +108,7 @@ The update interval starts when the audio is played or un-paused and stops when 
 * [`initialize(...)`](#initialize)
 * [`changeAudioSource(...)`](#changeaudiosource)
 * [`changeMetadata(...)`](#changemetadata)
+* [`updateMetadata(...)`](#updatemetadata)
 * [`getDuration(...)`](#getduration)
 * [`getCurrentTime(...)`](#getcurrenttime)
 * [`play(...)`](#play)
@@ -123,6 +124,7 @@ The update interval starts when the audio is played or un-paused and stops when 
 * [`onAudioReady(...)`](#onaudioready)
 * [`onAudioEnd(...)`](#onaudioend)
 * [`onPlaybackStatusChange(...)`](#onplaybackstatuschange)
+* [`onMetadataUpdate(...)`](#onmetadataupdate)
 * [Interfaces](#interfaces)
 
 </docgen-index>
@@ -204,6 +206,25 @@ Change the associated metadata of an existing audio source
 | **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a> & { albumTitle?: string; artistName?: string; friendlyTitle?: string; artworkSource?: string; }</code> |
 
 **Since:** 1.1.0
+
+--------------------
+
+
+### updateMetadata(...)
+
+```typescript
+updateMetadata(params: AudioPlayerDefaultParams) => Promise<void>
+```
+
+Update metadata from Update URL
+
+This runs async on the native side. Use
+
+| Param        | Type                                                                          |
+| ------------ | ----------------------------------------------------------------------------- |
+| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a></code> |
+
+**Since:** 2.2.0
 
 --------------------
 
@@ -491,6 +512,28 @@ This should be used to update the UI when the notification controls are used to 
 --------------------
 
 
+### onMetadataUpdate(...)
+
+```typescript
+onMetadataUpdate(params: AudioPlayerListenerParams, callback: (result: AudioPlayerMetadataUpdateListenerEvent) => void) => Promise<AudioPlayerListenerResult>
+```
+
+Registers a callback for when metadata updates from a URL.
+
+It will return all data from the URL response, not just the required data. So you could have the metadata endpoint return other data that you may need.
+
+| Param          | Type                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **`params`**   | <code><a href="#audioplayerlistenerparams">AudioPlayerListenerParams</a></code>                                                |
+| **`callback`** | <code>(result: <a href="#audioplayermetadataupdatelistenerevent">AudioPlayerMetadataUpdateListenerEvent</a>) =&gt; void</code> |
+
+**Returns:** <code>Promise&lt;<a href="#audioplayerlistenerresult">AudioPlayerListenerResult</a>&gt;</code>
+
+**Since:** 2.2.0
+
+--------------------
+
+
 ### Interfaces
 
 
@@ -508,8 +551,8 @@ This should be used to update the UI when the notification controls are used to 
 | **`loop`**                   | <code>boolean</code> | Whether or not to loop other audio like background music while the primary audio (`useForNotification = true`) is playing.                                                                                                                                                                                                                                                                                                                                                                               | <code>false</code> | 1.0.0 |
 | **`showSeekBackward`**       | <code>boolean</code> | Whether or not to show the seek backward button on the OS's notification. Only has affect when `useForNotification = true`.                                                                                                                                                                                                                                                                                                                                                                              | <code>true</code>  | 1.2.0 |
 | **`showSeekForward`**        | <code>boolean</code> | Whether or not to show the seek forward button on the OS's notification. Only has affect when `useForNotification = true`.                                                                                                                                                                                                                                                                                                                                                                               | <code>true</code>  | 1.2.0 |
-| **`metadataUpdateUrl`**      | <code>string</code>  | The URL to fetch metadata updates at the specified interval. Typically used for a radio stream. See the section on [Metadata Updates](#metadata-updates) for more info. Only has affect when `useForNotification = true`.                                                                                                                                                                                                                                                                                |                    | 2.1.0 |
-| **`metadataUpdateInterval`** | <code>number</code>  | The interval to fetch metadata updates in seconds.                                                                                                                                                                                                                                                                                                                                                                                                                                                       | <code>15</code>    | 2.1.0 |
+| **`metadataUpdateUrl`**      | <code>string</code>  | The URL to fetch metadata updates at the specified interval. Typically used for a radio stream. See the section on [Metadata Updates](#metadata-updates) for more info. Only has affect when `useForNotification = true`.                                                                                                                                                                                                                                                                                |                    | 2.2.0 |
+| **`metadataUpdateInterval`** | <code>number</code>  | The interval to fetch metadata updates in seconds.                                                                                                                                                                                                                                                                                                                                                                                                                                                       | <code>15</code>    | 2.2.0 |
 
 
 #### AudioPlayerDefaultParams
@@ -531,5 +574,15 @@ This should be used to update the UI when the notification controls are used to 
 | Prop          | Type                | Description                                 | Since |
 | ------------- | ------------------- | ------------------------------------------- | ----- |
 | **`audioId`** | <code>string</code> | The `audioId` set when `create` was called. | 1.0.0 |
+
+
+#### AudioPlayerMetadataUpdateListenerEvent
+
+| Prop                 | Type                | Description                                                               | Since |
+| -------------------- | ------------------- | ------------------------------------------------------------------------- | ----- |
+| **`album_title`**    | <code>string</code> | The album title                                                           | 2.2.0 |
+| **`artist_name`**    | <code>string</code> | The artist name                                                           | 2.2.0 |
+| **`song_title`**     | <code>string</code> | The song title                                                            | 2.2.0 |
+| **`artwork_source`** | <code>string</code> | A URI for the album art image to display on the Android/iOS notification. | 2.2.0 |
 
 </docgen-api>

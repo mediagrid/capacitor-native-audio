@@ -49,9 +49,9 @@ async function initialize(): Promise<void> {
 
     AudioPlayer.onAudioEnd({ audioId: audioId }, async () => {
         setText('status', 'stopped');
-        
+
         stopCurrentPositionUpdate(true);
-        
+
         AudioPlayer.stop({ audioId: bgAudioId });
     });
 
@@ -74,6 +74,10 @@ async function initialize(): Promise<void> {
         }
     });
 
+    AudioPlayer.onMetadataUpdate({ audioId: audioId }, result => {
+        console.log(result);
+    });
+
     await AudioPlayer.initialize({ audioId: audioId }).catch(ex => setError(ex));
     await AudioPlayer.initialize({ audioId: bgAudioId }).catch(ex => setError(ex));
 }
@@ -84,9 +88,9 @@ addClickEvent('playButton', async () => {
     }
 
     setText('status', 'playing');
-    
+
     await AudioPlayer.play({ audioId });
-    AudioPlayer.play({audioId: bgAudioId});
+    AudioPlayer.play({ audioId: bgAudioId });
     startCurrentPositionUpdate();
 
     AudioPlayer.setVolume({ audioId: bgAudioId, volume: 0.5 });
@@ -95,10 +99,10 @@ addClickEvent('playButton', async () => {
 
 addClickEvent('pauseButton', () => {
     setText('status', 'paused');
-    
+
     stopCurrentPositionUpdate();
     AudioPlayer.pause({ audioId });
-    
+
     AudioPlayer.pause({ audioId: bgAudioId });
 });
 
@@ -122,11 +126,17 @@ addClickEvent('changeMetadataButton', () => {
     });
 });
 
+addClickEvent('updateMetadataButton', () => {
+    AudioPlayer.updateMetadata({
+        audioId: audioId,
+    });
+});
+
 addClickEvent('cleanupButton', async () => {
     setText('status', 'stopped');
-    
+
     stopCurrentPositionUpdate(true);
-    
+
     await AudioPlayer.destroy({ audioId: bgAudioId });
     AudioPlayer.destroy({ audioId: audioId });
 
