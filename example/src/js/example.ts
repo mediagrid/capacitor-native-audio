@@ -48,7 +48,10 @@ async function initialize(): Promise<void> {
     });
 
     AudioPlayer.onAudioEnd({ audioId: audioId }, async () => {
+        setText('status', 'stopped');
+        
         stopCurrentPositionUpdate(true);
+        
         AudioPlayer.stop({ audioId: bgAudioId });
     });
 
@@ -57,16 +60,12 @@ async function initialize(): Promise<void> {
 
         switch (result.status) {
             case 'playing':
-                AudioPlayer.setVolume({ audioId: bgAudioId, volume: 0.5 });
-                AudioPlayer.play({ audioId: bgAudioId });
                 startCurrentPositionUpdate();
                 break;
             case 'paused':
-                AudioPlayer.pause({ audioId: bgAudioId });
                 stopCurrentPositionUpdate();
                 break;
             case 'stopped':
-                AudioPlayer.stop({ audioId: bgAudioId });
                 stopCurrentPositionUpdate(true);
                 break;
             default:
@@ -84,19 +83,32 @@ addClickEvent('playButton', async () => {
         await initialize();
     }
 
+    setText('status', 'playing');
+    
     await AudioPlayer.play({ audioId });
+    AudioPlayer.play({audioId: bgAudioId});
     startCurrentPositionUpdate();
+
+    AudioPlayer.setVolume({ audioId: bgAudioId, volume: 0.5 });
+    AudioPlayer.play({ audioId: bgAudioId });
 });
 
 addClickEvent('pauseButton', () => {
+    setText('status', 'paused');
+    
     stopCurrentPositionUpdate();
     AudioPlayer.pause({ audioId });
+    
+    AudioPlayer.pause({ audioId: bgAudioId });
 });
 
 addClickEvent('stopButton', () => {
     setText('status', 'stopped');
+
     stopCurrentPositionUpdate(true);
     AudioPlayer.stop({ audioId });
+
+    AudioPlayer.stop({ audioId: bgAudioId });
 });
 
 addClickEvent('changeMetadataButton', () => {
@@ -112,7 +124,9 @@ addClickEvent('changeMetadataButton', () => {
 
 addClickEvent('cleanupButton', async () => {
     setText('status', 'stopped');
+    
     stopCurrentPositionUpdate(true);
+    
     await AudioPlayer.destroy({ audioId: bgAudioId });
     AudioPlayer.destroy({ audioId: audioId });
 
