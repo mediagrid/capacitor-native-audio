@@ -101,7 +101,7 @@ public class AudioMetadata {
                     guard
                         let json = (try JSONSerialization.jsonObject(with: data!)) as? [String: Any]
                     else {
-                        print("The metdata update data could not be parsed as JSON")
+                        print("The metadata update data could not be parsed as JSON")
                         return
                     }
                     print(json)
@@ -112,7 +112,7 @@ public class AudioMetadata {
                     self.artworkSource = json["artwork_source"] as? String ?? ""
                 } catch {
                     print(
-                        "An error ocurred trying to get updated metadata: \(error.localizedDescription)"
+                        "An error occurred trying to get updated metadata: \(error.localizedDescription)"
                     )
                 }
 
