@@ -133,47 +133,44 @@ public class AudioMetadata {
     }
 
     private Future makeUpdateRequest() {
-        Runnable asyncHttpCall = new Runnable() {
-            @Override
-            public void run() {
-                Log.i(TAG, "Getting metadata from URL " + updateUrl);
-                HttpURLConnection urlConnection = null;
+        Runnable asyncHttpCall = () -> {
+            Log.i(TAG, "Getting metadata from URL " + updateUrl);
+            HttpURLConnection urlConnection = null;
 
-                try {
-                    URL url = new URL(updateUrl);
-                    urlConnection = (HttpURLConnection) url.openConnection();
-                    urlConnection.setRequestProperty("Accept", "application/json");
+            try {
+                URL url = new URL(updateUrl);
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestProperty("Accept", "application/json");
 
-                    InputStream errorStream = urlConnection.getErrorStream();
+                InputStream errorStream = urlConnection.getErrorStream();
 
-                    if (errorStream != null) {
-                        Log.e(
-                            TAG,
-                            String.format(
-                                "The metadata update server returned a status of %s with the message %s",
-                                urlConnection.getResponseCode(),
-                                HttpRequestHandler.readStreamAsString(errorStream)
-                            )
-                        );
-                    } else {
-                        JSObject json = new JSObject(
-                            HttpRequestHandler.readStreamAsString(urlConnection.getInputStream())
-                        );
+                if (errorStream != null) {
+                    Log.e(
+                        TAG,
+                        String.format(
+                            "The metadata update server returned a status of %s with the message %s",
+                            urlConnection.getResponseCode(),
+                            HttpRequestHandler.readStreamAsString(errorStream)
+                        )
+                    );
+                } else {
+                    JSObject json = new JSObject(
+                        HttpRequestHandler.readStreamAsString(urlConnection.getInputStream())
+                    );
 
-                        Log.i(TAG, json.toString());
+                    Log.i(TAG, json.toString());
 
-                        updateFullResponse = json;
-                        albumTitle = json.getString("album_title");
-                        artistName = json.getString("artist_name");
-                        songTitle = json.getString("song_title");
-                        artworkSource = json.getString("artwork_source");
-                    }
-                } catch (Exception ex) {
-                    Log.e(TAG, "An error occurred trying to get updated metadata", ex);
-                } finally {
-                    if (urlConnection != null) {
-                        urlConnection.disconnect();
-                    }
+                    updateFullResponse = json;
+                    albumTitle = json.getString("album_title");
+                    artistName = json.getString("artist_name");
+                    songTitle = json.getString("song_title");
+                    artworkSource = json.getString("artwork_source");
+                }
+            } catch (Exception ex) {
+                Log.e(TAG, "An error occurred trying to get updated metadata", ex);
+            } finally {
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
                 }
             }
         };
