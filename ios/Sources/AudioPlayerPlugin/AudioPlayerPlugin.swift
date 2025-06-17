@@ -27,7 +27,7 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "onAudioReady", returnType: CAPPluginReturnCallback),
         CAPPluginMethod(name: "onAudioEnd", returnType: CAPPluginReturnCallback),
         CAPPluginMethod(name: "onPlaybackStatusChange", returnType: CAPPluginReturnCallback),
-        CAPPluginMethod(name: "onMetadataUpdate", returnType: CAPPluginReturnCallback),
+        CAPPluginMethod(name: "onMetadataUpdate", returnType: CAPPluginReturnCallback)
     ]
 
     let audioSession = AVAudioSession.sharedInstance()
@@ -537,8 +537,7 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     func getAudioSource(methodName: String, call: CAPPluginCall) throws
-        -> AudioSource
-    {
+    -> AudioSource {
         return try getAudioSource(
             methodName: methodName,
             call: call,

@@ -488,9 +488,9 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         commandCenter.skipForwardCommand.removeTarget(nil)
     }
 
-    private func updateMetadata() {        
+    private func updateMetadata() {
         nowPlayingArtwork = nil
-        
+
         setupNowPlaying()
     }
 
