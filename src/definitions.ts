@@ -207,7 +207,7 @@ export interface AudioPlayerPlugin {
     /**
      * Update metadata from Update URL
      *
-     * This runs async on the native side. Use
+     * This runs async on the native side. Use the `onMetadataUpdate` listener to get the updated metadata.
      *
      * @since 2.2.0
      */
