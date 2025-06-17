@@ -60,12 +60,15 @@ async function initialize(): Promise<void> {
 
         switch (result.status) {
             case 'playing':
+                AudioPlayer.play({ audioId: bgAudioId });
                 startCurrentPositionUpdate();
                 break;
             case 'paused':
+                AudioPlayer.pause({ audioId: bgAudioId });
                 stopCurrentPositionUpdate();
                 break;
             case 'stopped':
+                AudioPlayer.stop({ audioId: bgAudioId });
                 stopCurrentPositionUpdate(true);
                 break;
             default:
