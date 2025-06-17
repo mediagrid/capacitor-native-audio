@@ -6,7 +6,6 @@ import android.util.Log;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.plugin.util.HttpRequestHandler;
-
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
