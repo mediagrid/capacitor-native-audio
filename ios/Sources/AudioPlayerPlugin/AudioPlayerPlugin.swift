@@ -11,6 +11,7 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "initialize", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "changeAudioSource", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "changeMetadata", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "updateMetadata", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getDuration", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getCurrentTime", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "play", returnType: CAPPluginReturnPromise),
@@ -25,7 +26,8 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "onAppLosesFocus", returnType: CAPPluginReturnCallback),
         CAPPluginMethod(name: "onAudioReady", returnType: CAPPluginReturnCallback),
         CAPPluginMethod(name: "onAudioEnd", returnType: CAPPluginReturnCallback),
-        CAPPluginMethod(name: "onPlaybackStatusChange", returnType: CAPPluginReturnCallback)
+        CAPPluginMethod(name: "onPlaybackStatusChange", returnType: CAPPluginReturnCallback),
+        CAPPluginMethod(name: "onMetadataUpdate", returnType: CAPPluginReturnCallback),
     ]
 
     let audioSession = AVAudioSession.sharedInstance()
@@ -185,6 +187,24 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
         } catch {
             call.reject(
                 "There was an issue changing the metadata.",
+                nil,
+                error
+            )
+        }
+    }
+
+    @objc func updateMetadata(_ call: CAPPluginCall) {
+        do {
+            try getAudioSource(methodName: "updateMetadata", call: call)
+                .audioMetadata
+                .updateMetadataByUrl()
+
+            call.resolve()
+        } catch AudioPlayerError.missingAudioSource {
+            return
+        } catch {
+            call.reject(
+                "There was an issue updating the metadata.",
                 nil,
                 error
             )
@@ -477,6 +497,25 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
+    @objc func onMetadataUpdate(_ call: CAPPluginCall) {
+        call.keepAlive = true
+        bridge?.saveCall(call)
+
+        do {
+            try getAudioSource(methodName: "onMetadataUpdate", call: call)
+                .audioMetadata
+                .setOnMetadataUpdate(callbackId: call.callbackId)
+        } catch AudioPlayerError.missingAudioSource {
+            return
+        } catch {
+            call.reject(
+                "There was an issue initializing metadata update.",
+                nil,
+                error
+            )
+        }
+    }
+
     @objc func handleAppToBackground() {
         print("Going to background")
 
@@ -498,7 +537,8 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     func getAudioSource(methodName: String, call: CAPPluginCall) throws
-    -> AudioSource {
+        -> AudioSource
+    {
         return try getAudioSource(
             methodName: methodName,
             call: call,
