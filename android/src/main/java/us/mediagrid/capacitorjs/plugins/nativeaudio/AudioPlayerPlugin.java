@@ -272,7 +272,7 @@ public class AudioPlayerPlugin extends Plugin {
             AudioSource audioSource = audioSources.get(audioId(call));
 
             postToLooper("updateMetadata", call, () -> {
-                audioSource.audioMetadata.updateMetadataByUrl();
+                audioSource.audioMetadata.updateMetadataByUrl(null);
 
                 call.resolve();
             });

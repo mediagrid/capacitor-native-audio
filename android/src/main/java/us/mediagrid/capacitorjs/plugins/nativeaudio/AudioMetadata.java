@@ -6,6 +6,7 @@ import android.util.Log;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.plugin.util.HttpRequestHandler;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -84,8 +85,7 @@ public class AudioMetadata {
         updateRunner = new Runnable() {
             @Override
             public void run() {
-                updateMetadataByUrl();
-                updateHandler.postDelayed(this, updateInterval * 1000);
+                updateMetadataByUrl(() -> updateHandler.postDelayed(this, updateInterval * 1000));
             }
         };
 
@@ -108,77 +108,86 @@ public class AudioMetadata {
         return updateUrl != null && updateUrl != "";
     }
 
-    public void updateMetadataByUrl() {
-        var requestTask = makeUpdateRequest();
+    public void updateMetadataByUrl(Runnable requeueCallback) {
+        if (pluginOwner.executorService.isShutdown()) {
+            return;
+        }
 
-        if (requestTask != null) {
+        pluginOwner.executorService.submit(() -> {
             try {
-                requestTask.get();
+                if (!makeUpdateRequest()) {
+                    return;
+                }
+
+                if (updateCallback != null) {
+                    // Updating the MediaController needs to be on the main thread
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        updateCallback.run();
+                    });
+                }
+
+                if (onMetadataUpdateCallbackId != null) {
+                    PluginCall call = pluginOwner
+                        .getBridge()
+                        .getSavedCall(onMetadataUpdateCallbackId);
+
+                    if (call != null) {
+                        call.resolve(updateFullResponse);
+                    }
+                }
             } catch (Exception ex) {
                 Log.e(TAG, "There was an error running the metadata update", ex);
             }
-        }
 
-        if (updateCallback != null) {
-            updateCallback.run();
-        }
-
-        if (onMetadataUpdateCallbackId != null) {
-            PluginCall call = pluginOwner.getBridge().getSavedCall(onMetadataUpdateCallbackId);
-
-            if (call != null) {
-                call.resolve(updateFullResponse);
+            if (requeueCallback != null) {
+                requeueCallback.run();
             }
-        }
+        });
     }
 
-    private Future makeUpdateRequest() {
-        Runnable asyncHttpCall = () -> {
-            Log.i(TAG, "Getting metadata from URL " + updateUrl);
-            HttpURLConnection urlConnection = null;
+    private boolean makeUpdateRequest() {
+        Log.i(TAG, "Getting metadata from URL " + updateUrl);
+        HttpURLConnection urlConnection = null;
 
-            try {
-                URL url = new URL(updateUrl);
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestProperty("Accept", "application/json");
+        try {
+            URL url = new URL(updateUrl);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setRequestProperty("Accept", "application/json");
 
-                InputStream errorStream = urlConnection.getErrorStream();
+            InputStream errorStream = urlConnection.getErrorStream();
 
-                if (errorStream != null) {
-                    Log.e(
-                        TAG,
-                        String.format(
-                            "The metadata update server returned a status of %s with the message %s",
-                            urlConnection.getResponseCode(),
-                            HttpRequestHandler.readStreamAsString(errorStream)
-                        )
-                    );
-                } else {
-                    JSObject json = new JSObject(
-                        HttpRequestHandler.readStreamAsString(urlConnection.getInputStream())
-                    );
+            if (errorStream != null) {
+                Log.e(
+                    TAG,
+                    String.format(
+                        "The metadata update server returned a status of %s with the message %s",
+                        urlConnection.getResponseCode(),
+                        HttpRequestHandler.readStreamAsString(errorStream)
+                    )
+                );
+            } else {
+                JSObject json = new JSObject(
+                    HttpRequestHandler.readStreamAsString(urlConnection.getInputStream())
+                );
 
-                    Log.i(TAG, json.toString());
+                Log.i(TAG, json.toString());
 
-                    updateFullResponse = json;
-                    albumTitle = json.getString("album_title");
-                    artistName = json.getString("artist_name");
-                    songTitle = json.getString("song_title");
-                    artworkSource = json.getString("artwork_source");
-                }
-            } catch (Exception ex) {
-                Log.e(TAG, "An error occurred trying to get updated metadata", ex);
-            } finally {
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
+                updateFullResponse = json;
+                albumTitle = json.getString("album_title");
+                artistName = json.getString("artist_name");
+                songTitle = json.getString("song_title");
+                artworkSource = json.getString("artwork_source");
+
+                return true;
             }
-        };
-
-        if (!pluginOwner.executorService.isShutdown()) {
-            return pluginOwner.executorService.submit(asyncHttpCall);
+        } catch (Exception ex) {
+            Log.e(TAG, "An error occurred trying to get updated metadata", ex);
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
         }
 
-        return null;
+        return false;
     }
 }
