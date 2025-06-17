@@ -6,11 +6,10 @@ import android.util.Log;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.plugin.util.HttpRequestHandler;
-import com.google.common.util.concurrent.ListenableFuture;
+
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.concurrent.Future;
 
 public class AudioMetadata {
 
@@ -23,7 +22,7 @@ public class AudioMetadata {
     public String updateUrl;
     public Integer updateInterval = 15;
 
-    public String onMetadataUpdateCallbackId;
+    private String onMetadataUpdateCallbackId;
 
     private Handler updateHandler = null;
     private Runnable updateRunner = null;
