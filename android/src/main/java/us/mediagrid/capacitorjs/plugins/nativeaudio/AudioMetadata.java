@@ -69,6 +69,10 @@ public class AudioMetadata {
         return this;
     }
 
+    public void setOnMetadataUpdate(String callbackId) {
+        onMetadataUpdateCallbackId = callbackId;
+    }
+
     public void startUpdater() {
         if (!hasUpdateUrl() || updateHandler != null) {
             return;

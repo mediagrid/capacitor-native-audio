@@ -525,6 +525,18 @@ public class AudioPlayerPlugin extends Plugin {
         audioSources.get(audioId(call)).setOnPlaybackStatusChange(call.getCallbackId());
     }
 
+    @PluginMethod(returnType = PluginMethod.RETURN_CALLBACK)
+    public void onMetadataUpdate(PluginCall call) {
+        if (!audioSourceExists("onMetadataUpdate", call)) {
+            return;
+        }
+
+        call.setKeepAlive(true);
+        getBridge().saveCall(call);
+
+        audioSources.get(audioId(call)).audioMetadata.setOnMetadataUpdate(call.getCallbackId());
+    }
+
     @Override
     protected void handleOnStart() {
         Log.i(TAG, "Handling onStart");
