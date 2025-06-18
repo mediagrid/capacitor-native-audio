@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
     appName: 'example',
     webDir: 'dist',
     server: {
-        url: 'http://localhost:3000',
+        url: 'http://localhost:5173',
         cleartext: true,
     },
 };
