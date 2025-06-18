@@ -19,12 +19,18 @@
                     <button id="pauseButton" class="btn bg-yellow-600 text-white">Pause</button>
                     <button id="stopButton" class="btn bg-blue-600 text-white">Stop</button>
                 </div>
-                <div class="mt-4">
+                <div class="mt-4 flex flex-col space-y-1">
                     <button
                         id="changeMetadataButton"
                         class="btn btn-sm bg-blue-300 text-bg-blue-800"
                     >
                         Change Metadata
+                    </button>
+                    <button
+                        id="updateMetadataButton"
+                        class="btn btn-sm bg-blue-300 text-bg-blue-800"
+                    >
+                        Update Metadata (from URL)
                     </button>
                 </div>
                 <p class="mt-4">Status: <span id="status">stopped</span></p>

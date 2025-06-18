@@ -27,6 +27,8 @@ async function initialize(): Promise<void> {
         loop: false,
         showSeekForward: true,
         showSeekBackward: true,
+        // metadataUpdateUrl: 'https://pfd4e5xj5qvsvsdcghre2222vm0pvhsj.lambda-url.us-east-2.on.aws?includeOtherData=0',
+        // metadataUpdateInterval: 30,
     }).catch(ex => setError(ex));
 
     await AudioPlayer.create({
@@ -46,7 +48,10 @@ async function initialize(): Promise<void> {
     });
 
     AudioPlayer.onAudioEnd({ audioId: audioId }, async () => {
+        setText('status', 'stopped');
+
         stopCurrentPositionUpdate(true);
+
         AudioPlayer.stop({ audioId: bgAudioId });
     });
 
@@ -55,7 +60,6 @@ async function initialize(): Promise<void> {
 
         switch (result.status) {
             case 'playing':
-                AudioPlayer.setVolume({ audioId: bgAudioId, volume: 0.5 });
                 AudioPlayer.play({ audioId: bgAudioId });
                 startCurrentPositionUpdate();
                 break;
@@ -73,6 +77,10 @@ async function initialize(): Promise<void> {
         }
     });
 
+    AudioPlayer.onMetadataUpdate({ audioId: audioId }, result => {
+        console.log(result);
+    });
+
     await AudioPlayer.initialize({ audioId: audioId }).catch(ex => setError(ex));
     await AudioPlayer.initialize({ audioId: bgAudioId }).catch(ex => setError(ex));
 }
@@ -82,19 +90,32 @@ addClickEvent('playButton', async () => {
         await initialize();
     }
 
+    setText('status', 'playing');
+
     await AudioPlayer.play({ audioId });
+    AudioPlayer.play({ audioId: bgAudioId });
     startCurrentPositionUpdate();
+
+    AudioPlayer.setVolume({ audioId: bgAudioId, volume: 0.5 });
+    AudioPlayer.play({ audioId: bgAudioId });
 });
 
 addClickEvent('pauseButton', () => {
+    setText('status', 'paused');
+
     stopCurrentPositionUpdate();
     AudioPlayer.pause({ audioId });
+
+    AudioPlayer.pause({ audioId: bgAudioId });
 });
 
 addClickEvent('stopButton', () => {
     setText('status', 'stopped');
+
     stopCurrentPositionUpdate(true);
     AudioPlayer.stop({ audioId });
+
+    AudioPlayer.stop({ audioId: bgAudioId });
 });
 
 addClickEvent('changeMetadataButton', () => {
@@ -108,9 +129,17 @@ addClickEvent('changeMetadataButton', () => {
     });
 });
 
+addClickEvent('updateMetadataButton', () => {
+    AudioPlayer.updateMetadata({
+        audioId: audioId,
+    });
+});
+
 addClickEvent('cleanupButton', async () => {
     setText('status', 'stopped');
+
     stopCurrentPositionUpdate(true);
+
     await AudioPlayer.destroy({ audioId: bgAudioId });
     AudioPlayer.destroy({ audioId: audioId });
 

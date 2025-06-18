@@ -100,6 +100,23 @@ export interface AudioPlayerPrepareParams extends AudioPlayerDefaultParams {
      * @since 1.2.0
      */
     showSeekForward?: boolean;
+
+    /**
+     * The URL to fetch metadata updates at the specified interval. Typically used for a radio stream.
+     * See the section on [Metadata Updates](#metadata-updates) for more info.
+     * Only has affect when `useForNotification = true`.
+     *
+     * @since 2.2.0
+     */
+    metadataUpdateUrl?: string;
+
+    /**
+     * The interval to fetch metadata updates in seconds.
+     *
+     * @default 15
+     * @since 2.2.0
+     */
+    metadataUpdateInterval?: number;
 }
 
 export interface AudioPlayerListenerParams {
@@ -113,6 +130,36 @@ export interface AudioPlayerListenerParams {
 
 export interface AudioPlayerListenerResult {
     callbackId: string;
+}
+
+export interface AudioPlayerMetadataUpdateListenerEvent {
+    /**
+     * The album title
+     *
+     * @since 2.2.0
+     */
+    album_title: string;
+
+    /**
+     * The artist name
+     *
+     * @since 2.2.0
+     */
+    artist_name: string;
+
+    /**
+     * The song title
+     *
+     * @since 2.2.0
+     */
+    song_title: string;
+
+    /**
+     * A URI for the album art image to display on the Android/iOS notification.
+     *
+     * @since 2.2.0
+     */
+    artwork_source: string;
 }
 
 export interface AudioPlayerPlugin {
@@ -156,6 +203,15 @@ export interface AudioPlayerPlugin {
             artworkSource?: string;
         },
     ): Promise<void>;
+
+    /**
+     * Update metadata from Update URL
+     *
+     * This runs async on the native side. Use the `onMetadataUpdate` listener to get the updated metadata.
+     *
+     * @since 2.2.0
+     */
+    updateMetadata(params: AudioPlayerDefaultParams): Promise<void>;
 
     /**
      * Get the duration of the audio source.
@@ -287,5 +343,17 @@ export interface AudioPlayerPlugin {
     onPlaybackStatusChange(
         params: AudioPlayerListenerParams,
         callback: (result: { status: 'playing' | 'paused' | 'stopped' }) => void,
+    ): Promise<AudioPlayerListenerResult>;
+
+    /**
+     * Registers a callback for when metadata updates from a URL.
+     *
+     * It will return all data from the URL response, not just the required data. So you could have the metadata endpoint return other data that you may need.
+     *
+     * @since 2.2.0
+     */
+    onMetadataUpdate(
+        params: AudioPlayerListenerParams,
+        callback: (result: AudioPlayerMetadataUpdateListenerEvent) => void,
     ): Promise<AudioPlayerListenerResult>;
 }

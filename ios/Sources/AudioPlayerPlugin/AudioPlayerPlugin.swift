@@ -11,6 +11,7 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "initialize", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "changeAudioSource", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "changeMetadata", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "updateMetadata", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getDuration", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getCurrentTime", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "play", returnType: CAPPluginReturnPromise),
@@ -25,7 +26,8 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "onAppLosesFocus", returnType: CAPPluginReturnCallback),
         CAPPluginMethod(name: "onAudioReady", returnType: CAPPluginReturnCallback),
         CAPPluginMethod(name: "onAudioEnd", returnType: CAPPluginReturnCallback),
-        CAPPluginMethod(name: "onPlaybackStatusChange", returnType: CAPPluginReturnCallback)
+        CAPPluginMethod(name: "onPlaybackStatusChange", returnType: CAPPluginReturnCallback),
+        CAPPluginMethod(name: "onMetadataUpdate", returnType: CAPPluginReturnCallback)
     ]
 
     let audioSession = AVAudioSession.sharedInstance()
@@ -92,7 +94,9 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
                     albumTitle: call.getString("albumTitle", ""),
                     artistName: call.getString("artistName", ""),
                     songTitle: friendlyTitle,
-                    artworkSource: call.getString("artworkSource", "")
+                    artworkSource: call.getString("artworkSource", ""),
+                    updateUrl: call.getString("metadataUpdateUrl", ""),
+                    updateInterval: call.getInt("metadataUpdateInterval", -1)
                 ),
                 useForNotification: call.getBool("useForNotification", false),
                 isBackgroundMusic: call.getBool("isBackgroundMusic", false),
@@ -171,7 +175,9 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
                         albumTitle: call.getString("albumTitle", ""),
                         artistName: call.getString("artistName", ""),
                         songTitle: call.getString("friendlyTitle", ""),
-                        artworkSource: call.getString("artworkSource", "")
+                        artworkSource: call.getString("artworkSource", ""),
+                        updateUrl: "",
+                        updateInterval: -1
                     )
                 )
 
@@ -181,6 +187,24 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
         } catch {
             call.reject(
                 "There was an issue changing the metadata.",
+                nil,
+                error
+            )
+        }
+    }
+
+    @objc func updateMetadata(_ call: CAPPluginCall) {
+        do {
+            try getAudioSource(methodName: "updateMetadata", call: call)
+                .audioMetadata
+                .updateMetadataByUrl()
+
+            call.resolve()
+        } catch AudioPlayerError.missingAudioSource {
+            return
+        } catch {
+            call.reject(
+                "There was an issue updating the metadata.",
                 nil,
                 error
             )
@@ -467,6 +491,25 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
         } catch {
             call.reject(
                 "There was an issue initializing playback status change.",
+                nil,
+                error
+            )
+        }
+    }
+
+    @objc func onMetadataUpdate(_ call: CAPPluginCall) {
+        call.keepAlive = true
+        bridge?.saveCall(call)
+
+        do {
+            try getAudioSource(methodName: "onMetadataUpdate", call: call)
+                .audioMetadata
+                .setOnMetadataUpdate(callbackId: call.callbackId)
+        } catch AudioPlayerError.missingAudioSource {
+            return
+        } catch {
+            call.reject(
+                "There was an issue initializing metadata update.",
                 nil,
                 error
             )

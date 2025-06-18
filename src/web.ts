@@ -4,6 +4,7 @@ import type {
     AudioPlayerDefaultParams,
     AudioPlayerListenerParams,
     AudioPlayerListenerResult,
+    AudioPlayerMetadataUpdateListenerEvent,
     AudioPlayerPlugin,
     AudioPlayerPrepareParams,
 } from './definitions';
@@ -27,6 +28,10 @@ export class AudioPlayerWeb extends WebPlugin implements AudioPlayerPlugin {
             artworkSource?: string;
         },
     ): Promise<void> {
+        throw this.unimplemented('Not implemented on web.');
+    }
+
+    updateMetadata(params: AudioPlayerDefaultParams): Promise<void> {
         throw this.unimplemented('Not implemented on web.');
     }
 
@@ -101,6 +106,13 @@ export class AudioPlayerWeb extends WebPlugin implements AudioPlayerPlugin {
     onPlaybackStatusChange(
         params: AudioPlayerListenerParams,
         callback: (result: { status: 'playing' | 'paused' | 'stopped' }) => void,
+    ): Promise<AudioPlayerListenerResult> {
+        throw this.unimplemented('Not implemented on web.');
+    }
+
+    onMetadataUpdate(
+        params: AudioPlayerListenerParams,
+        callback: (result: AudioPlayerMetadataUpdateListenerEvent) => void,
     ): Promise<AudioPlayerListenerResult> {
         throw this.unimplemented('Not implemented on web.');
     }

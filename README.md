@@ -83,6 +83,23 @@ If you would like a now playing icon to show in the iOS notification, add an ima
 
 A PNG is recommended with the size of 1024 x 1024px. The same image can be used for the three different Asset wells (1x, 2x, 3x).
 
+# Metadata Updates
+
+This plugin supports playing audio streams and in order to update the metadata in the native OS notification, there is the ability for this plugin to fetch metadata from a specified URL at a set interval.
+
+The URL shall return a JSON response with the following format:
+
+```json
+{
+    "album_title": "My Album Title",
+    "artist_name": "My Artist Name",
+    "song_title": "My Song Title",
+    "artwork_source": "https://example.com/example_artwork.png"
+}
+```
+
+The update interval starts when the audio is played or un-paused and stops when paused, stopped or the audio ends.
+
 # API
 
 <docgen-index>
@@ -91,6 +108,7 @@ A PNG is recommended with the size of 1024 x 1024px. The same image can be used 
 * [`initialize(...)`](#initialize)
 * [`changeAudioSource(...)`](#changeaudiosource)
 * [`changeMetadata(...)`](#changemetadata)
+* [`updateMetadata(...)`](#updatemetadata)
 * [`getDuration(...)`](#getduration)
 * [`getCurrentTime(...)`](#getcurrenttime)
 * [`play(...)`](#play)
@@ -106,6 +124,7 @@ A PNG is recommended with the size of 1024 x 1024px. The same image can be used 
 * [`onAudioReady(...)`](#onaudioready)
 * [`onAudioEnd(...)`](#onaudioend)
 * [`onPlaybackStatusChange(...)`](#onplaybackstatuschange)
+* [`onMetadataUpdate(...)`](#onmetadataupdate)
 * [Interfaces](#interfaces)
 
 </docgen-index>
@@ -187,6 +206,25 @@ Change the associated metadata of an existing audio source
 | **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a> & { albumTitle?: string; artistName?: string; friendlyTitle?: string; artworkSource?: string; }</code> |
 
 **Since:** 1.1.0
+
+--------------------
+
+
+### updateMetadata(...)
+
+```typescript
+updateMetadata(params: AudioPlayerDefaultParams) => Promise<void>
+```
+
+Update metadata from Update URL
+
+This runs async on the native side. Use the `onMetadataUpdate` listener to get the updated metadata.
+
+| Param        | Type                                                                          |
+| ------------ | ----------------------------------------------------------------------------- |
+| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a></code> |
+
+**Since:** 2.2.0
 
 --------------------
 
@@ -479,23 +517,47 @@ It may be fixed in the future for Android if a solution is found so don't rely o
 --------------------
 
 
+### onMetadataUpdate(...)
+
+```typescript
+onMetadataUpdate(params: AudioPlayerListenerParams, callback: (result: AudioPlayerMetadataUpdateListenerEvent) => void) => Promise<AudioPlayerListenerResult>
+```
+
+Registers a callback for when metadata updates from a URL.
+
+It will return all data from the URL response, not just the required data. So you could have the metadata endpoint return other data that you may need.
+
+| Param          | Type                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **`params`**   | <code><a href="#audioplayerlistenerparams">AudioPlayerListenerParams</a></code>                                                |
+| **`callback`** | <code>(result: <a href="#audioplayermetadataupdatelistenerevent">AudioPlayerMetadataUpdateListenerEvent</a>) =&gt; void</code> |
+
+**Returns:** <code>Promise&lt;<a href="#audioplayerlistenerresult">AudioPlayerListenerResult</a>&gt;</code>
+
+**Since:** 2.2.0
+
+--------------------
+
+
 ### Interfaces
 
 
 #### AudioPlayerPrepareParams
 
-| Prop                     | Type                 | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Default            | Since |
-| ------------------------ | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ----- |
-| **`audioSource`**        | <code>string</code>  | A URI for the audio file to play                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |                    | 1.0.0 |
-| **`albumTitle`**         | <code>string</code>  | The album title/name of the audio file to be used on the notification                                                                                                                                                                                                                                                                                                                                                                                                                                    |                    | 2.1.0 |
-| **`artistName`**         | <code>string</code>  | The artist name of the audio file to be used on the notification                                                                                                                                                                                                                                                                                                                                                                                                                                         |                    | 2.1.0 |
-| **`friendlyTitle`**      | <code>string</code>  | The title/name of the audio file to be used on the notification                                                                                                                                                                                                                                                                                                                                                                                                                                          |                    | 1.0.0 |
-| **`useForNotification`** | <code>boolean</code> | Whether to use this audio file for the notification. This is considered the primary audio to play. It must be created first and you may only have one at a time.                                                                                                                                                                                                                                                                                                                                         | <code>false</code> | 1.0.0 |
-| **`artworkSource`**      | <code>string</code>  | A URI for the album art image to display on the Android/iOS notification. Can also be an in-app source. Pulls from `android/app/src/assets/public` and `ios/App/App/public`. If using [Vite](https://vitejs.dev/guide/assets.html#the-public-directory), you would put the image in your `public` folder and the build process will copy to `dist` which in turn will be copied to the Android/iOS assets by Capacitor. A PNG is the best option with square dimensions. 1200 x 1200px is a good option. |                    | 1.0.0 |
-| **`isBackgroundMusic`**  | <code>boolean</code> | Is this audio for background music/audio. Should not be `true` when `useForNotification = true`.                                                                                                                                                                                                                                                                                                                                                                                                         | <code>false</code> | 1.0.0 |
-| **`loop`**               | <code>boolean</code> | Whether or not to loop other audio like background music while the primary audio (`useForNotification = true`) is playing.                                                                                                                                                                                                                                                                                                                                                                               | <code>false</code> | 1.0.0 |
-| **`showSeekBackward`**   | <code>boolean</code> | Whether or not to show the seek backward button on the OS's notification. Only has affect when `useForNotification = true`.                                                                                                                                                                                                                                                                                                                                                                              | <code>true</code>  | 1.2.0 |
-| **`showSeekForward`**    | <code>boolean</code> | Whether or not to show the seek forward button on the OS's notification. Only has affect when `useForNotification = true`.                                                                                                                                                                                                                                                                                                                                                                               | <code>true</code>  | 1.2.0 |
+| Prop                         | Type                 | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Default            | Since |
+| ---------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ----- |
+| **`audioSource`**            | <code>string</code>  | A URI for the audio file to play                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |                    | 1.0.0 |
+| **`albumTitle`**             | <code>string</code>  | The album title/name of the audio file to be used on the notification                                                                                                                                                                                                                                                                                                                                                                                                                                    |                    | 2.1.0 |
+| **`artistName`**             | <code>string</code>  | The artist name of the audio file to be used on the notification                                                                                                                                                                                                                                                                                                                                                                                                                                         |                    | 2.1.0 |
+| **`friendlyTitle`**          | <code>string</code>  | The title/name of the audio file to be used on the notification                                                                                                                                                                                                                                                                                                                                                                                                                                          |                    | 1.0.0 |
+| **`useForNotification`**     | <code>boolean</code> | Whether to use this audio file for the notification. This is considered the primary audio to play. It must be created first and you may only have one at a time.                                                                                                                                                                                                                                                                                                                                         | <code>false</code> | 1.0.0 |
+| **`artworkSource`**          | <code>string</code>  | A URI for the album art image to display on the Android/iOS notification. Can also be an in-app source. Pulls from `android/app/src/assets/public` and `ios/App/App/public`. If using [Vite](https://vitejs.dev/guide/assets.html#the-public-directory), you would put the image in your `public` folder and the build process will copy to `dist` which in turn will be copied to the Android/iOS assets by Capacitor. A PNG is the best option with square dimensions. 1200 x 1200px is a good option. |                    | 1.0.0 |
+| **`isBackgroundMusic`**      | <code>boolean</code> | Is this audio for background music/audio. Should not be `true` when `useForNotification = true`.                                                                                                                                                                                                                                                                                                                                                                                                         | <code>false</code> | 1.0.0 |
+| **`loop`**                   | <code>boolean</code> | Whether or not to loop other audio like background music while the primary audio (`useForNotification = true`) is playing.                                                                                                                                                                                                                                                                                                                                                                               | <code>false</code> | 1.0.0 |
+| **`showSeekBackward`**       | <code>boolean</code> | Whether or not to show the seek backward button on the OS's notification. Only has affect when `useForNotification = true`.                                                                                                                                                                                                                                                                                                                                                                              | <code>true</code>  | 1.2.0 |
+| **`showSeekForward`**        | <code>boolean</code> | Whether or not to show the seek forward button on the OS's notification. Only has affect when `useForNotification = true`.                                                                                                                                                                                                                                                                                                                                                                               | <code>true</code>  | 1.2.0 |
+| **`metadataUpdateUrl`**      | <code>string</code>  | The URL to fetch metadata updates at the specified interval. Typically used for a radio stream. See the section on [Metadata Updates](#metadata-updates) for more info. Only has affect when `useForNotification = true`.                                                                                                                                                                                                                                                                                |                    | 2.2.0 |
+| **`metadataUpdateInterval`** | <code>number</code>  | The interval to fetch metadata updates in seconds.                                                                                                                                                                                                                                                                                                                                                                                                                                                       | <code>15</code>    | 2.2.0 |
 
 
 #### AudioPlayerDefaultParams
@@ -517,5 +579,15 @@ It may be fixed in the future for Android if a solution is found so don't rely o
 | Prop          | Type                | Description                                 | Since |
 | ------------- | ------------------- | ------------------------------------------- | ----- |
 | **`audioId`** | <code>string</code> | The `audioId` set when `create` was called. | 1.0.0 |
+
+
+#### AudioPlayerMetadataUpdateListenerEvent
+
+| Prop                 | Type                | Description                                                               | Since |
+| -------------------- | ------------------- | ------------------------------------------------------------------------- | ----- |
+| **`album_title`**    | <code>string</code> | The album title                                                           | 2.2.0 |
+| **`artist_name`**    | <code>string</code> | The artist name                                                           | 2.2.0 |
+| **`song_title`**     | <code>string</code> | The song title                                                            | 2.2.0 |
+| **`artwork_source`** | <code>string</code> | A URI for the album art image to display on the Android/iOS notification. | 2.2.0 |
 
 </docgen-api>

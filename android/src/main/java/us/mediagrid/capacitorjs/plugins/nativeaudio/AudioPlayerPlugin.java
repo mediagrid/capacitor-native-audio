@@ -21,12 +21,15 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import us.mediagrid.capacitorjs.plugins.nativeaudio.exceptions.DestroyNotAllowedException;
 
 @CapacitorPlugin(name = "AudioPlayer")
 public class AudioPlayerPlugin extends Plugin {
 
     private static final String TAG = "AudioPlayerPlugin";
+    public final ExecutorService executorService = Executors.newCachedThreadPool();
 
     private ListenableFuture<MediaController> audioMediaControllerFuture;
     private MediaController audioMediaController;
@@ -67,7 +70,9 @@ public class AudioPlayerPlugin extends Plugin {
                     call.getString("albumTitle"),
                     call.getString("artistName"),
                     call.getString("friendlyTitle"),
-                    call.getString("artworkSource")
+                    call.getString("artworkSource"),
+                    call.getString("metadataUpdateUrl"),
+                    call.getInt("metadataUpdateInterval")
                 ),
                 call.getBoolean("useForNotification", false),
                 call.getBoolean("isBackgroundMusic", false),
@@ -244,7 +249,9 @@ public class AudioPlayerPlugin extends Plugin {
                         call.getString("albumTitle"),
                         call.getString("artistName"),
                         call.getString("friendlyTitle"),
-                        call.getString("artworkSource")
+                        call.getString("artworkSource"),
+                        null,
+                        null
                     )
                 );
 
@@ -252,6 +259,25 @@ public class AudioPlayerPlugin extends Plugin {
             });
         } catch (Exception ex) {
             call.reject("There was an issue changing the metadata.", ex);
+        }
+    }
+
+    @PluginMethod
+    public void updateMetadata(PluginCall call) {
+        try {
+            if (!audioSourceExists("updateMetadata", call)) {
+                return;
+            }
+
+            AudioSource audioSource = audioSources.get(audioId(call));
+
+            postToLooper("updateMetadata", call, () -> {
+                audioSource.audioMetadata.updateMetadataByUrl(null);
+
+                call.resolve();
+            });
+        } catch (Exception ex) {
+            call.reject("There was an issue updating the metadata.", ex);
         }
     }
 
@@ -434,10 +460,9 @@ public class AudioPlayerPlugin extends Plugin {
             postToLooper("destroy", call, () -> {
                 if (audioSource.useForNotification) {
                     releaseMediaController();
-                } else {
-                    audioSource.releasePlayer();
                 }
 
+                audioSource.destroy();
                 audioSources.remove(audioId);
 
                 call.resolve();
@@ -499,6 +524,18 @@ public class AudioPlayerPlugin extends Plugin {
         audioSources.get(audioId(call)).setOnPlaybackStatusChange(call.getCallbackId());
     }
 
+    @PluginMethod(returnType = PluginMethod.RETURN_CALLBACK)
+    public void onMetadataUpdate(PluginCall call) {
+        if (!audioSourceExists("onMetadataUpdate", call)) {
+            return;
+        }
+
+        call.setKeepAlive(true);
+        getBridge().saveCall(call);
+
+        audioSources.get(audioId(call)).audioMetadata.setOnMetadataUpdate(call.getCallbackId());
+    }
+
     @Override
     protected void handleOnStart() {
         Log.i(TAG, "Handling onStart");
@@ -522,6 +559,7 @@ public class AudioPlayerPlugin extends Plugin {
         Log.i(TAG, "Handling onDestroy");
 
         releaseMediaController();
+        executorService.shutdownNow();
 
         super.handleOnDestroy();
     }

@@ -52,6 +52,8 @@ public class AudioSource extends Binder {
         this.useForNotification = useForNotification;
         this.isBackgroundMusic = isBackgroundMusic;
         this.loopAudio = loopAudio;
+
+        this.audioMetadata.setPluginOwner(pluginOwner).setUpdateCallBack(this::updateMetadata);
     }
 
     public void initialize(Context context) {
@@ -95,15 +97,8 @@ public class AudioSource extends Binder {
     }
 
     public void changeMetadata(AudioMetadata metadata) {
-        this.audioMetadata = metadata;
-
-        var currentMediaItem = getPlayer().getCurrentMediaItem();
-        var newMediaItem = currentMediaItem
-            .buildUpon()
-            .setMediaMetadata(getMediaMetadata())
-            .build();
-
-        getPlayer().replaceMediaItem(0, newMediaItem);
+        audioMetadata.update(metadata);
+        updateMetadata();
     }
 
     public float getDuration() {
@@ -130,11 +125,16 @@ public class AudioSource extends Binder {
         }
 
         player.play();
+
+        if (useForNotification) {
+            audioMetadata.startUpdater();
+        }
     }
 
     public void pause() {
         setIsPaused();
         getPlayer().pause();
+        audioMetadata.stopUpdater();
     }
 
     public void seek(long timeInSeconds) {
@@ -147,6 +147,7 @@ public class AudioSource extends Binder {
         Player player = getPlayer();
         player.pause();
         player.seekToDefaultPosition();
+        audioMetadata.stopUpdater();
     }
 
     public void setVolume(float volume) {
@@ -230,6 +231,24 @@ public class AudioSource extends Binder {
 
     public MediaItem buildMediaItem() {
         return new MediaItem.Builder().setMediaMetadata(getMediaMetadata()).setUri(source).build();
+    }
+
+    public void destroy() {
+        audioMetadata.stopUpdater();
+
+        if (!useForNotification) {
+            releasePlayer();
+        }
+    }
+
+    private void updateMetadata() {
+        var currentMediaItem = getPlayer().getCurrentMediaItem();
+        var newMediaItem = currentMediaItem
+            .buildUpon()
+            .setMediaMetadata(getMediaMetadata())
+            .build();
+
+        getPlayer().replaceMediaItem(0, newMediaItem);
     }
 
     private MediaMetadata getMediaMetadata() {

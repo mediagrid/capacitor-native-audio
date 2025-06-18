@@ -50,6 +50,12 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         self.loopAudio = loopAudio
         self.showSeekBackward = showSeekBackward
         self.showSeekForward = showSeekForward
+
+        super.init()
+
+        self.audioMetadata.setPluginOwner(pluginOwner: pluginOwner).setUpdateCallback(
+            callback: self.updateMetadata
+        )
     }
 
     func initialize() throws {
@@ -94,11 +100,10 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     }
 
     func changeMetadata(metadata: AudioMetadata) {
-        audioMetadata = metadata
+        audioMetadata.update(metadata: metadata)
         nowPlayingArtwork = nil
 
-        removeNowPlaying()
-        setupNowPlaying()
+        updateMetadata()
     }
 
     func getDuration() -> TimeInterval {
@@ -137,6 +142,10 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
 
         isPaused = false
         setNowPlayingPlaybackState(state: .playing)
+
+        if useForNotification {
+            audioMetadata.startUpdater()
+        }
     }
 
     func pause() {
@@ -148,6 +157,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
 
         isPaused = true
         setNowPlayingPlaybackState(state: .paused)
+        audioMetadata.stopUpdater()
+
     }
 
     func seek(timeInSeconds: Int64, fromUi: Bool = false) {
@@ -181,6 +192,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         setNowPlayingPlaybackState(state: .stopped)
         removeRemoteTransportControls()
         removeNowPlaying()
+        audioMetadata.stopUpdater()
     }
 
     func setVolume(volume: Float) {
@@ -227,6 +239,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     }
 
     func destroy() {
+        audioMetadata.stopUpdater()
         removeOnEndObservation()
         isPaused = false
         removeRemoteTransportControls()
@@ -329,10 +342,6 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     }
 
     private func observeOnEnd() {
-        if onEndCallbackId == "" {
-            return
-        }
-
         if loopAudio {
             return
         }
@@ -352,6 +361,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         ) {
             [weak self] in
             self?.stop()
+            self?.audioMetadata.stopUpdater()
+
             self?.makePluginCall(callbackId: self?.onEndCallbackId ?? "")
         }
     }
@@ -478,6 +489,12 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         commandCenter.skipForwardCommand.removeTarget(nil)
     }
 
+    private func updateMetadata() {
+        nowPlayingArtwork = nil
+
+        setupNowPlaying()
+    }
+
     private func setupNowPlaying() {
         if !useForNotification {
             return
@@ -560,7 +577,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
             )
         }
 
-        let task = URLSession.shared.dataTask(
+        URLSession.shared.dataTask(
             with: artworkSourceUrl
         ) { data, _, _ in
             guard let imageData = data, let image = UIImage(data: imageData)
@@ -581,9 +598,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
                     value: self.nowPlayingArtwork
                 )
             }
-        }
-
-        task.resume()
+        }.resume()
     }
 
     private func setNowPlayingCurrentTime() {
