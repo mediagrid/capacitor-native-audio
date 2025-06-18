@@ -462,7 +462,7 @@ public class AudioPlayerPlugin extends Plugin {
                     releaseMediaController();
                 }
 
-                audioSource.cleanup();
+                audioSource.destroy();
                 audioSources.remove(audioId);
 
                 call.resolve();

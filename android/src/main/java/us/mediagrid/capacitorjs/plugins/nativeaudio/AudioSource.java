@@ -233,7 +233,7 @@ public class AudioSource extends Binder {
         return new MediaItem.Builder().setMediaMetadata(getMediaMetadata()).setUri(source).build();
     }
 
-    public void cleanup() {
+    public void destroy() {
         audioMetadata.stopUpdater();
 
         if (!useForNotification) {
