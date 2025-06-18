@@ -460,10 +460,9 @@ public class AudioPlayerPlugin extends Plugin {
             postToLooper("destroy", call, () -> {
                 if (audioSource.useForNotification) {
                     releaseMediaController();
-                } else {
-                    audioSource.releasePlayer();
                 }
 
+                audioSource.cleanup();
                 audioSources.remove(audioId);
 
                 call.resolve();
