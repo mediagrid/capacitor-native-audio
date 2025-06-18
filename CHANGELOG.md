@@ -2,7 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/mediagrid/capacitor-native-audio/compare/v2.1.1...HEAD)
+## [Unreleased](https://github.com/mediagrid/capacitor-native-audio/compare/v2.2.0...HEAD)
+
+## [v2.2.0](https://github.com/mediagrid/capacitor-native-audio/compare/v2.1.1...v2.2.0) - 2025-06-18
+
+### What's Changed
+
+* feat: Add metadata update via URL on an interval by @wsamoht in https://github.com/mediagrid/capacitor-native-audio/pull/25
+* example: Improve play status and change Vite default port
+
+**Full Changelog**: https://github.com/mediagrid/capacitor-native-audio/compare/v2.1.1...v2.2.0
 
 ## [v2.1.1](https://github.com/mediagrid/capacitor-native-audio/compare/v2.1.0...v2.1.1) - 2025-05-30
 
