@@ -239,6 +239,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     }
 
     func destroy() {
+        audioMetadata.stopUpdater()
         removeOnEndObservation()
         isPaused = false
         removeRemoteTransportControls()
