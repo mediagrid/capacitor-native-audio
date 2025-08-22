@@ -102,19 +102,19 @@ export interface AudioPlayerPrepareParams extends AudioPlayerDefaultParams {
     showSeekForward?: boolean;
 
     /**
-     * Time to seek backward on the OS's notification.
+     * Time to seek backward in seconds on the OS's notification.
      * Only has affect when `showSeekBackward = true`.
      *
-     * @default true
+     * @default 5
      * @since 2.3.0
      */
     seekBackwardTime?: number;
 
     /**
-     * Time to seek forward on the OS's notification.
+     * Time to seek forward in seconds on the OS's notification.
      * Only has affect when `showSeekForward = true`.
      *
-     * @default true
+     * @default 5
      * @since 2.3.0
      */
     seekForwardTime?: number;

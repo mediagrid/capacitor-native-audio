@@ -24,8 +24,8 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     private var isPaused: Bool = false
     private var showSeekBackward: Bool
     private var showSeekForward: Bool
-    private var seekBackwardTime: Int = 5
-    private var seekForwardTime: Int = 5
+    private var seekBackwardTime: Int
+    private var seekForwardTime: Int
 
     private var audioReadyObservation: NSKeyValueObservation?
     private var audioOnEndObservation: Any?
