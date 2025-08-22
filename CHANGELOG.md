@@ -2,7 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/mediagrid/capacitor-native-audio/compare/v2.2.0...HEAD)
+## [Unreleased](https://github.com/mediagrid/capacitor-native-audio/compare/v2.3.0...HEAD)
+
+## [v2.3.0](https://github.com/mediagrid/capacitor-native-audio/compare/v2.2.0...v2.3.0) - 2025-08-22
+
+### What's Changed
+
+* feat: Add ability to configure seek time by @pejota14 in https://github.com/mediagrid/capacitor-native-audio/pull/44
+* Bump Android Media3 library to [v1.8.0](https://github.com/androidx/media/releases/tag/1.8.0) by @wsamoht  in [24564fe](https://github.com/mediagrid/capacitor-native-audio/commit/24564fe90cd163c19b3999ec47c9cd37c660e62a)
+* example: Upgrade to Vite v7 by @wsamoht in [85bbc18](https://github.com/mediagrid/capacitor-native-audio/commit/85bbc18e49b60ce37d82b43b0090cbc221edc2d9)
+
+**Full Changelog**: https://github.com/mediagrid/capacitor-native-audio/compare/v2.2.0...v2.3.0
 
 ## [v2.2.0](https://github.com/mediagrid/capacitor-native-audio/compare/v2.1.1...v2.2.0) - 2025-06-18
 
