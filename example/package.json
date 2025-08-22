@@ -1,32 +1,32 @@
 {
-  "name": "capacitor-app",
-  "version": "1.0.0",
-  "description": "An Amazing Capacitor App",
-  "main": "index.js",
-  "keywords": [
-    "capacitor",
-    "mobile"
-  ],
-  "scripts": {
-    "start": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "android": "npx cap run android && vite --host",
-    "ios": "npx cap run ios && vite --host"
-  },
-  "dependencies": {
-    "@capacitor/android": "^7.0.0",
-    "@capacitor/core": "^7.0.0",
-    "@capacitor/ios": "^7.0.0",
-    "@mediagrid/capacitor-native-audio": "file:.."
-  },
-  "devDependencies": {
-    "@capacitor/cli": "^7.0.0",
-    "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.39",
-    "tailwindcss": "^3.4.6",
-    "vite": "^5.4.8"
-  },
-  "author": "Tom Westrick",
-  "license": "ISC"
+    "name": "capacitor-app",
+    "version": "1.0.0",
+    "description": "An Amazing Capacitor App",
+    "main": "index.js",
+    "keywords": [
+        "capacitor",
+        "mobile"
+    ],
+    "scripts": {
+        "start": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "android": "npx cap run android && vite --host",
+        "ios": "npx cap run ios && vite --host"
+    },
+    "dependencies": {
+        "@capacitor/android": "^7.0.0",
+        "@capacitor/core": "^7.0.0",
+        "@capacitor/ios": "^7.0.0",
+        "@mediagrid/capacitor-native-audio": "file:.."
+    },
+    "devDependencies": {
+        "@capacitor/cli": "^7.0.0",
+        "autoprefixer": "^10.4.19",
+        "postcss": "^8.4.39",
+        "tailwindcss": "^3.4.6",
+        "vite": "^7.0.0"
+    },
+    "author": "Tom Westrick",
+    "license": "ISC"
 }
