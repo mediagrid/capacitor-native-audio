@@ -102,7 +102,9 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
                 isBackgroundMusic: call.getBool("isBackgroundMusic", false),
                 loopAudio: call.getBool("loop", false),
                 showSeekBackward: call.getBool("showSeekBackward", true),
-                showSeekForward: call.getBool("showSeekForward", true)
+                showSeekForward: call.getBool("showSeekForward", true),
+                seekBackwardTime: call.getInt("seekBackwardTime", 5),
+                seekForwardTime: call.getInt("seekForwardTime", 5)
             )
 
             if audioSources.count() == 0 && !audioSource.useForNotification {

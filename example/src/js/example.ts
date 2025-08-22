@@ -27,6 +27,8 @@ async function initialize(): Promise<void> {
         loop: false,
         showSeekForward: true,
         showSeekBackward: true,
+        // seekBackwardTime: 2,
+        // seekForwardTime: 2,
         // metadataUpdateUrl: 'https://pfd4e5xj5qvsvsdcghre2222vm0pvhsj.lambda-url.us-east-2.on.aws?includeOtherData=0',
         // metadataUpdateInterval: 30,
     }).catch(ex => setError(ex));

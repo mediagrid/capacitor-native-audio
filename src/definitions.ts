@@ -102,6 +102,24 @@ export interface AudioPlayerPrepareParams extends AudioPlayerDefaultParams {
     showSeekForward?: boolean;
 
     /**
+     * Time to seek backward in seconds on the OS's notification.
+     * Only has affect when `showSeekBackward = true`.
+     *
+     * @default 5
+     * @since 2.3.0
+     */
+    seekBackwardTime?: number;
+
+    /**
+     * Time to seek forward in seconds on the OS's notification.
+     * Only has affect when `showSeekForward = true`.
+     *
+     * @default 5
+     * @since 2.3.0
+     */
+    seekForwardTime?: number;
+
+    /**
      * The URL to fetch metadata updates at the specified interval. Typically used for a radio stream.
      * See the section on [Metadata Updates](#metadata-updates) for more info.
      * Only has affect when `useForNotification = true`.
