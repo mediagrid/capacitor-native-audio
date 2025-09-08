@@ -357,21 +357,23 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
         removeOnEndObservation()
 
         audioOnEndObservation = NotificationCenter.default.addObserver(
-            forName: .AVPlayerItemDidPlayToEndTime,
+            forName: AVPlayerItem.didPlayToEndTimeNotification,
             object: player.currentItem,
             queue: .main
         ) {
             [weak self] _ in
             guard let self else { return }
+
             self.stop()
             self.audioMetadata.stopUpdater()
 
-            self.makePluginCall(callbackId: self.onEndCallbackId ?? "")
+            self.makePluginCall(callbackId: self.onEndCallbackId)
         }
     }
 
     private func removeOnEndObservation() {
         guard let observer = audioOnEndObservation else { return }
+
         NotificationCenter.default.removeObserver(observer)
         audioOnEndObservation = nil
     }
