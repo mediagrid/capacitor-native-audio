@@ -28,7 +28,7 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     private var seekForwardTime: Int
 
     private var audioReadyObservation: NSKeyValueObservation?
-    private var audioOnEndObservation: Any?
+    private var audioOnEndObservation: NSObjectProtocol?
 
     public init(
         pluginOwner: AudioPlayerPlugin,
@@ -354,29 +354,27 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
             return
         }
 
-        var times = [NSValue]()
-        times.append(
-            NSValue(time: player.currentItem?.duration ?? getCmTime(seconds: 0))
-        )
+        removeOnEndObservation()
 
-        audioOnEndObservation = player.addBoundaryTimeObserver(
-            forTimes: times,
+        audioOnEndObservation = NotificationCenter.default.addObserver(
+            forName: AVPlayerItem.didPlayToEndTimeNotification,
+            object: player.currentItem,
             queue: .main
         ) {
-            [weak self] in
-            self?.stop()
-            self?.audioMetadata.stopUpdater()
+            [weak self] _ in
+            guard let self else { return }
 
-            self?.makePluginCall(callbackId: self?.onEndCallbackId ?? "")
+            self.stop()
+            self.audioMetadata.stopUpdater()
+
+            self.makePluginCall(callbackId: self.onEndCallbackId)
         }
     }
 
     private func removeOnEndObservation() {
-        if audioOnEndObservation == nil {
-            return
-        }
+        guard let observer = audioOnEndObservation else { return }
 
-        player.removeTimeObserver(audioOnEndObservation as Any)
+        NotificationCenter.default.removeObserver(observer)
         audioOnEndObservation = nil
     }
 
