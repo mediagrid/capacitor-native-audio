@@ -1,10 +1,12 @@
 package us.mediagrid.capacitorjs.plugins.nativeaudio;
 
+import android.app.Notification;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
+import androidx.core.app.NotificationCompat;
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
 import androidx.media3.common.Player;
@@ -43,6 +45,14 @@ public class AudioPlayerService extends MediaSessionService {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "Service starting");
+        // Ensure we transition to foreground promptly to avoid 5s timeout
+        try {
+            Notification notification = buildForegroundNotification();
+            // Use a stable ID for the foreground service notification
+            startForeground(1, notification);
+        } catch (Exception ex) {
+            Log.e(TAG, "Failed to start foreground with notification", ex);
+        }
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -100,5 +110,17 @@ public class AudioPlayerService extends MediaSessionService {
         }
 
         return null;
+    }
+
+    private Notification buildForegroundNotification() {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, PLAYBACK_CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_media_play)
+            .setContentTitle("Audio playback")
+            .setContentText("Playing media")
+            .setOngoing(true)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE);
+
+        return builder.build();
     }
 }

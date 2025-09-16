@@ -4,6 +4,15 @@
 
 Play audio in a Capacitor app natively (Android/iOS) from a URL/web source simultaneously with background audio. Also supports background playing with an OS notification.
 
+### Playback Progress Tracking
+
+This plugin includes native-level playback progress tracking that can monitor which specific seconds of audio content are actually played by the user. The tracking system:
+
+- **Smart Skip Detection**: Automatically detects and ignores large time jumps (seeking/skipping) to only count genuinely listened content
+- **Native Performance**: Runs at the native level for reliable operation even when JavaScript execution is limited
+- **Flexible Usage**: Suitable for analytics, progress tracking, completion detection, or any scenario requiring accurate playback measurement
+- **Automatic Cleanup**: Tracked data is cleared after retrieval to prevent duplicate reporting
+
 ## Install
 
 ```bash
@@ -106,6 +115,9 @@ The update interval starts when the audio is played or un-paused and stops when 
 
 * [`create(...)`](#create)
 * [`initialize(...)`](#initialize)
+* [`startBackgroundTracking(...)`](#startbackgroundtracking)
+* [`stopBackgroundTracking(...)`](#stopbackgroundtracking)
+* [`fetchBackgroundPlayedSeconds(...)`](#fetchbackgroundplayedseconds)
 * [`changeAudioSource(...)`](#changeaudiosource)
 * [`changeMetadata(...)`](#changemetadata)
 * [`updateMetadata(...)`](#updatemetadata)
@@ -168,6 +180,64 @@ Should be called after callbacks are registered (e.g. `onAudioReady`).
 **Returns:** <code>Promise&lt;{ success: boolean; }&gt;</code>
 
 **Since:** 1.0.0
+
+--------------------
+
+
+### startBackgroundTracking(...)
+
+```typescript
+startBackgroundTracking(params: AudioPlayerDefaultParams & { duration: number; }) => Promise<void>
+```
+
+Start native-level tracking of audio playback progress.
+Tracks individual seconds of audio that are actually played (not skipped or seeked over).
+Useful for analytics, progress tracking, or when JavaScript execution may be limited.
+
+| Param        | Type                                                                                                  |
+| ------------ | ----------------------------------------------------------------------------------------------------- |
+| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a> & { duration: number; }</code> |
+
+**Since:** 3.0.0
+
+--------------------
+
+
+### stopBackgroundTracking(...)
+
+```typescript
+stopBackgroundTracking(params: AudioPlayerDefaultParams) => Promise<void>
+```
+
+Stop native-level tracking of audio playback progress.
+Call this when you no longer need to track playback seconds natively.
+
+| Param        | Type                                                                          |
+| ------------ | ----------------------------------------------------------------------------- |
+| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a></code> |
+
+**Since:** 3.0.0
+
+--------------------
+
+
+### fetchBackgroundPlayedSeconds(...)
+
+```typescript
+fetchBackgroundPlayedSeconds(params: AudioPlayerDefaultParams) => Promise<{ seconds: number[]; }>
+```
+
+Retrieve and clear the collected playback progress data.
+Returns an array of unique second timestamps that were actually played (excluding skipped content).
+The data is automatically cleared after fetching to prevent duplicate reporting.
+
+| Param        | Type                                                                          |
+| ------------ | ----------------------------------------------------------------------------- |
+| **`params`** | <code><a href="#audioplayerdefaultparams">AudioPlayerDefaultParams</a></code> |
+
+**Returns:** <code>Promise&lt;{ seconds: number[]; }&gt;</code>
+
+**Since:** 3.0.0
 
 --------------------
 

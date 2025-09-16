@@ -29,6 +29,11 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
 
     private var audioReadyObservation: NSKeyValueObservation?
     private var audioOnEndObservation: NSObjectProtocol?
+    
+    // Background tracking properties
+    private var backgroundTrackingTimeObserver: Any?
+    private var backgroundPlayedSeconds: Set<Int> = Set()
+    private var isBackgroundTrackingActive: Bool = false
 
     public init(
         pluginOwner: AudioPlayerPlugin,
@@ -245,10 +250,87 @@ public class AudioSource: NSObject, AVAudioPlayerDelegate {
     func destroy() {
         audioMetadata.stopUpdater()
         removeOnEndObservation()
+        stopBackgroundTracking()
         isPaused = false
         removeRemoteTransportControls()
         removeNowPlaying()
         removeInterruptionNotifications()
+    }
+
+    // MARK: - Background Tracking Methods
+    
+    private var backgroundTrackingStartTime: CMTime = CMTime.zero
+    private var lastRecordedTime: CMTime = CMTime.zero
+    
+    func startBackgroundTracking(duration: Double) {
+        guard !loopAudio && !isBackgroundTrackingActive else {
+            return
+        }
+        
+        isBackgroundTrackingActive = true
+        backgroundPlayedSeconds.removeAll()
+        
+        // Record the starting position
+        backgroundTrackingStartTime = player.currentTime()
+        lastRecordedTime = backgroundTrackingStartTime
+        print("Background tracking starting from position: \(Int(backgroundTrackingStartTime.seconds)) seconds")
+        
+        // Create a time observer that fires every second
+        let interval = CMTimeMake(value: 1, timescale: 1)
+        backgroundTrackingTimeObserver = player.addPeriodicTimeObserver(
+            forInterval: interval,
+            queue: .main
+        ) { [weak self] time in
+            guard let self = self else { return }
+            
+            // Only track if audio is actually playing
+            if self.isPlaying() {
+                let timeDiff = time - self.lastRecordedTime
+                
+                // Only track if position progressed normally (similar to JS SEEK_THRESHOLD logic)
+                // Allow up to 3 seconds for background tracking (slightly more lenient than JS)
+                if timeDiff.seconds > 0 && timeDiff.seconds <= 3.0 {
+                    let startSecond = Int(self.lastRecordedTime.seconds)
+                    let endSecond = Int(time.seconds)
+                    
+                    // Only record the actual progression, not skipped content
+                    let maxSecond = min(endSecond, Int(duration))
+                    if startSecond <= maxSecond {
+                        for second in startSecond...maxSecond {
+                            if CMTime(seconds: Double(second), preferredTimescale: 1) >= self.backgroundTrackingStartTime {
+                                self.backgroundPlayedSeconds.insert(second)
+                                print("Background tracking recorded second: \(second) (progression: \(timeDiff.seconds)s)")
+                            }
+                        }
+                    }
+                    
+                    self.lastRecordedTime = time
+                } else if timeDiff.seconds > 3.0 {
+                    print("Background tracking detected skip: \(timeDiff.seconds)s - not tracking skipped content")
+                    // Update time but don't track the skipped seconds
+                    self.lastRecordedTime = time
+                }
+            }
+        }
+    }
+    
+    func stopBackgroundTracking() {
+        guard isBackgroundTrackingActive else {
+            return
+        }
+        
+        isBackgroundTrackingActive = false
+        
+        if let observer = backgroundTrackingTimeObserver {
+            player.removeTimeObserver(observer)
+            backgroundTrackingTimeObserver = nil
+        }
+    }
+    
+    func fetchBackgroundPlayedSeconds() -> [Int] {
+        let seconds = Array(backgroundPlayedSeconds).sorted()
+        backgroundPlayedSeconds.removeAll()
+        return seconds
     }
 
     private func createPlayerItem() throws -> AVPlayerItem {

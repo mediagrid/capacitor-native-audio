@@ -22,6 +22,9 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "setRate", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "isPlaying", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "destroy", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "startBackgroundTracking", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "stopBackgroundTracking", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "fetchBackgroundPlayedSeconds", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "onAppGainsFocus", returnType: CAPPluginReturnCallback),
         CAPPluginMethod(name: "onAppLosesFocus", returnType: CAPPluginReturnCallback),
         CAPPluginMethod(name: "onAudioReady", returnType: CAPPluginReturnCallback),
@@ -512,6 +515,61 @@ public class AudioPlayerPlugin: CAPPlugin, CAPBridgedPlugin {
         } catch {
             call.reject(
                 "There was an issue initializing metadata update.",
+                nil,
+                error
+            )
+        }
+    }
+
+    @objc func startBackgroundTracking(_ call: CAPPluginCall) {
+        do {
+            guard let duration = call.getDouble("duration") else {
+                throw AudioPlayerError.runtimeError("Duration is required for background tracking")
+            }
+
+            try getAudioSource(methodName: "startBackgroundTracking", call: call)
+                .startBackgroundTracking(duration: duration)
+
+            call.resolve()
+        } catch AudioPlayerError.missingAudioSource {
+            return
+        } catch {
+            call.reject(
+                "There was an issue starting background tracking.",
+                nil,
+                error
+            )
+        }
+    }
+
+    @objc func stopBackgroundTracking(_ call: CAPPluginCall) {
+        do {
+            try getAudioSource(methodName: "stopBackgroundTracking", call: call)
+                .stopBackgroundTracking()
+
+            call.resolve()
+        } catch AudioPlayerError.missingAudioSource {
+            return
+        } catch {
+            call.reject(
+                "There was an issue stopping background tracking.",
+                nil,
+                error
+            )
+        }
+    }
+
+    @objc func fetchBackgroundPlayedSeconds(_ call: CAPPluginCall) {
+        do {
+            let seconds = try getAudioSource(methodName: "fetchBackgroundPlayedSeconds", call: call)
+                .fetchBackgroundPlayedSeconds()
+
+            call.resolve(["seconds": seconds])
+        } catch AudioPlayerError.missingAudioSource {
+            return
+        } catch {
+            call.reject(
+                "There was an issue fetching background played seconds.",
                 nil,
                 error
             )

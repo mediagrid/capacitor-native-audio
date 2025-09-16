@@ -13,6 +13,7 @@ import androidx.media3.session.MediaController;
 import androidx.media3.session.SessionCommand;
 import androidx.media3.session.SessionResult;
 import androidx.media3.session.SessionToken;
+import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -536,6 +537,69 @@ public class AudioPlayerPlugin extends Plugin {
         audioSources.get(audioId(call)).audioMetadata.setOnMetadataUpdate(call.getCallbackId());
     }
 
+    @PluginMethod
+    public void startBackgroundTracking(PluginCall call) {
+        try {
+            if (!audioSourceExists("startBackgroundTracking", call)) {
+                return;
+            }
+
+            Double duration = call.getDouble("duration");
+            if (duration == null) {
+                call.reject("Duration is required for background tracking");
+                return;
+            }
+
+            postToLooper("startBackgroundTracking", call, () -> {
+                audioSources.get(audioId(call)).startBackgroundTracking(duration.intValue());
+                call.resolve();
+            });
+        } catch (Exception ex) {
+            call.reject("There was an issue starting background tracking.", ex);
+        }
+    }
+
+    @PluginMethod
+    public void stopBackgroundTracking(PluginCall call) {
+        try {
+            if (!audioSourceExists("stopBackgroundTracking", call)) {
+                return;
+            }
+
+            postToLooper("stopBackgroundTracking", call, () -> {
+                audioSources.get(audioId(call)).stopBackgroundTracking();
+                call.resolve();
+            });
+        } catch (Exception ex) {
+            call.reject("There was an issue stopping background tracking.", ex);
+        }
+    }
+
+    @PluginMethod
+    public void fetchBackgroundPlayedSeconds(PluginCall call) {
+        try {
+            if (!audioSourceExists("fetchBackgroundPlayedSeconds", call)) {
+                return;
+            }
+
+            postToLooper("fetchBackgroundPlayedSeconds", call, () -> {
+                int[] seconds = audioSources.get(audioId(call)).fetchBackgroundPlayedSeconds();
+                
+                // Convert int[] to JSArray for proper serialization
+                JSArray secondsArray = new JSArray();
+                for (int second : seconds) {
+                    secondsArray.put(second);
+                }
+                
+                JSObject result = new JSObject();
+                result.put("seconds", secondsArray);
+                call.resolve(result);
+            });
+        } catch (Exception ex) {
+            call.reject("There was an issue fetching background played seconds.", ex);
+        }
+    }
+
     @Override
     protected void handleOnStart() {
         Log.i(TAG, "Handling onStart");
@@ -650,7 +714,9 @@ public class AudioPlayerPlugin extends Plugin {
     }
 
     private Context getContextForAudioService() {
-        return this.getActivity();
+        // Prefer application context to decouple from Activity lifecycle
+        Context appContext = getContext().getApplicationContext();
+        return appContext != null ? appContext : getContext();
     }
 
     private void createNotificationChannel() {

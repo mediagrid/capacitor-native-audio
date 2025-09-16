@@ -116,4 +116,22 @@ export class AudioPlayerWeb extends WebPlugin implements AudioPlayerPlugin {
     ): Promise<AudioPlayerListenerResult> {
         throw this.unimplemented('Not implemented on web.');
     }
+
+    startBackgroundTracking(params: AudioPlayerDefaultParams & { duration: number }): Promise<void> {
+        // On web, background tracking is not needed since JS timers work fine
+        // Return resolved promise to avoid breaking the flow
+        return Promise.resolve();
+    }
+
+    stopBackgroundTracking(params: AudioPlayerDefaultParams): Promise<void> {
+        // On web, background tracking is not needed since JS timers work fine
+        // Return resolved promise to avoid breaking the flow
+        return Promise.resolve();
+    }
+
+    fetchBackgroundPlayedSeconds(params: AudioPlayerDefaultParams): Promise<{ seconds: number[] }> {
+        // On web, background tracking is not needed since JS timers work fine
+        // Return empty array to indicate no background data
+        return Promise.resolve({ seconds: [] });
+    }
 }

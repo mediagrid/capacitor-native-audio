@@ -3,6 +3,8 @@ package us.mediagrid.capacitorjs.plugins.nativeaudio;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
@@ -12,6 +14,11 @@ import androidx.media3.common.Player;
 import androidx.media3.exoplayer.ExoPlayer;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class AudioSource extends Binder {
 
@@ -35,6 +42,13 @@ public class AudioSource extends Binder {
 
     private boolean isPlaying = false;
     private boolean isStopped = true;
+
+    // Background tracking properties
+    private Handler backgroundTrackingHandler;
+    private Runnable backgroundTrackingRunnable;
+    private Set<Integer> backgroundPlayedSeconds = new HashSet<>();
+    private boolean isBackgroundTrackingActive = false;
+    private int trackingDuration = 0;
 
     public AudioSource(
         AudioPlayerPlugin pluginOwner,
@@ -235,10 +249,113 @@ public class AudioSource extends Binder {
 
     public void destroy() {
         audioMetadata.stopUpdater();
+        stopBackgroundTracking();
 
         if (!useForNotification) {
             releasePlayer();
         }
+    }
+
+    // Background tracking methods
+    private long backgroundTrackingStartPosition = 0;
+    private long lastRecordedPosition = 0;
+
+    public void startBackgroundTracking(int duration) {
+        if (loopAudio || isBackgroundTrackingActive) {
+            Log.d(TAG, "Background tracking already active or loop audio - skipping start");
+            return;
+        }
+
+        Log.d(TAG, "Starting background tracking for audio ID: " + id + ", duration: " + duration);
+        isBackgroundTrackingActive = true;
+        trackingDuration = duration;
+        backgroundPlayedSeconds.clear();
+        
+        // Record the starting position
+        Player currentPlayer = getPlayer();
+        backgroundTrackingStartPosition = currentPlayer != null ? currentPlayer.getCurrentPosition() : 0;
+        lastRecordedPosition = backgroundTrackingStartPosition;
+        Log.d(TAG, "Background tracking starting from position: " + (backgroundTrackingStartPosition / 1000) + " seconds");
+
+        backgroundTrackingHandler = new Handler(Looper.getMainLooper());
+        backgroundTrackingRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (!isBackgroundTrackingActive) {
+                    return;
+                }
+
+                Player currentPlayer = getPlayer();
+                if (currentPlayer != null && isPlaying()) {
+                    long currentPosition = currentPlayer.getCurrentPosition();
+                    
+                    // Calculate position difference in milliseconds
+                    long positionDiff = currentPosition - lastRecordedPosition;
+                    
+                    // Only track if position progressed normally (similar to JS SEEK_THRESHOLD logic)
+                    // Allow up to 3 seconds for background tracking (slightly more lenient than JS)
+                    if (positionDiff > 0 && positionDiff <= 3000) { // 3000ms = 3 seconds
+                        int startSecond = (int) (lastRecordedPosition / 1000);
+                        int endSecond = (int) (currentPosition / 1000);
+                        
+                        // Only record the actual progression, not skipped content
+                        for (int second = startSecond; second <= endSecond && second <= trackingDuration; second++) {
+                            if (second * 1000 >= backgroundTrackingStartPosition) {
+                                backgroundPlayedSeconds.add(second);
+                                Log.d(TAG, "Background tracking recorded second: " + second + " (progression: " + positionDiff + "ms)");
+                            }
+                        }
+                        
+                        lastRecordedPosition = currentPosition;
+                    } else if (positionDiff > 3000) {
+                        Log.d(TAG, "Background tracking detected skip: " + positionDiff + "ms - not tracking skipped content");
+                        // Update position but don't track the skipped seconds
+                        lastRecordedPosition = currentPosition;
+                    }
+                }
+
+                // Schedule next execution
+                if (isBackgroundTrackingActive) {
+                    backgroundTrackingHandler.postDelayed(this, 1000); // 1 second interval
+                }
+            }
+        };
+
+        // Start the tracking
+        backgroundTrackingHandler.post(backgroundTrackingRunnable);
+    }
+
+    public void stopBackgroundTracking() {
+        if (!isBackgroundTrackingActive) {
+            Log.d(TAG, "Background tracking already stopped for audio ID: " + id);
+            return;
+        }
+
+        Log.d(TAG, "Stopping background tracking for audio ID: " + id);
+        isBackgroundTrackingActive = false;
+
+        if (backgroundTrackingHandler != null && backgroundTrackingRunnable != null) {
+            backgroundTrackingHandler.removeCallbacks(backgroundTrackingRunnable);
+            backgroundTrackingHandler = null;
+            backgroundTrackingRunnable = null;
+            Log.d(TAG, "Background tracking handler cleaned up for audio ID: " + id);
+        }
+    }
+
+    public int[] fetchBackgroundPlayedSeconds() {
+        List<Integer> sortedSeconds = new ArrayList<>(backgroundPlayedSeconds);
+        Collections.sort(sortedSeconds);
+        
+        // Convert to int array
+        int[] result = new int[sortedSeconds.size()];
+        for (int i = 0; i < sortedSeconds.size(); i++) {
+            result[i] = sortedSeconds.get(i);
+        }
+        
+        // Clear the set after fetching
+        backgroundPlayedSeconds.clear();
+        
+        return result;
     }
 
     private void updateMetadata() {

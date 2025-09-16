@@ -1,0 +1,941 @@
+{
+  "api": {
+    "name": "AudioPlayerPlugin",
+    "slug": "audioplayerplugin",
+    "docs": "",
+    "tags": [],
+    "methods": [
+      {
+        "name": "create",
+        "signature": "(params: AudioPlayerPrepareParams) => Promise<{ success: boolean; }>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerPrepareParams"
+          }
+        ],
+        "returns": "Promise<{ success: boolean; }>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Create an audio source to be played.",
+        "complexTypes": [
+          "AudioPlayerPrepareParams"
+        ],
+        "slug": "create"
+      },
+      {
+        "name": "initialize",
+        "signature": "(params: AudioPlayerDefaultParams) => Promise<{ success: boolean; }>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerDefaultParams"
+          }
+        ],
+        "returns": "Promise<{ success: boolean; }>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Initialize the audio source. Prepares the audio to be played, buffers and such.\n\nShould be called after callbacks are registered (e.g. `onAudioReady`).",
+        "complexTypes": [
+          "AudioPlayerDefaultParams"
+        ],
+        "slug": "initialize"
+      },
+      {
+        "name": "startBackgroundTracking",
+        "signature": "(params: AudioPlayerDefaultParams & { duration: number; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerDefaultParams & { duration: number; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "3.0.0"
+          }
+        ],
+        "docs": "Start native-level tracking of audio playback progress.\nTracks individual seconds of audio that are actually played (not skipped or seeked over).\nUseful for analytics, progress tracking, or when JavaScript execution may be limited.",
+        "complexTypes": [
+          "AudioPlayerDefaultParams"
+        ],
+        "slug": "startbackgroundtracking"
+      },
+      {
+        "name": "stopBackgroundTracking",
+        "signature": "(params: AudioPlayerDefaultParams) => Promise<void>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerDefaultParams"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "3.0.0"
+          }
+        ],
+        "docs": "Stop native-level tracking of audio playback progress.\nCall this when you no longer need to track playback seconds natively.",
+        "complexTypes": [
+          "AudioPlayerDefaultParams"
+        ],
+        "slug": "stopbackgroundtracking"
+      },
+      {
+        "name": "fetchBackgroundPlayedSeconds",
+        "signature": "(params: AudioPlayerDefaultParams) => Promise<{ seconds: number[]; }>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerDefaultParams"
+          }
+        ],
+        "returns": "Promise<{ seconds: number[]; }>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "3.0.0"
+          }
+        ],
+        "docs": "Retrieve and clear the collected playback progress data.\nReturns an array of unique second timestamps that were actually played (excluding skipped content).\nThe data is automatically cleared after fetching to prevent duplicate reporting.",
+        "complexTypes": [
+          "AudioPlayerDefaultParams"
+        ],
+        "slug": "fetchbackgroundplayedseconds"
+      },
+      {
+        "name": "changeAudioSource",
+        "signature": "(params: AudioPlayerDefaultParams & { source: string; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerDefaultParams & { source: string; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Change the audio source on an existing audio source (`audioId`).\n\nThis is useful for changing background music while the primary audio is playing\nor changing the primary audio before it is playing to accommodate different durations\nthat a user can choose from.",
+        "complexTypes": [
+          "AudioPlayerDefaultParams"
+        ],
+        "slug": "changeaudiosource"
+      },
+      {
+        "name": "changeMetadata",
+        "signature": "(params: AudioPlayerDefaultParams & { albumTitle?: string; artistName?: string; friendlyTitle?: string; artworkSource?: string; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerDefaultParams & { albumTitle?: string | undefined; artistName?: string | undefined; friendlyTitle?: string | undefined; artworkSource?: string | undefined; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.1.0"
+          }
+        ],
+        "docs": "Change the associated metadata of an existing audio source",
+        "complexTypes": [
+          "AudioPlayerDefaultParams"
+        ],
+        "slug": "changemetadata"
+      },
+      {
+        "name": "updateMetadata",
+        "signature": "(params: AudioPlayerDefaultParams) => Promise<void>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerDefaultParams"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "2.2.0"
+          }
+        ],
+        "docs": "Update metadata from Update URL\n\nThis runs async on the native side. Use the `onMetadataUpdate` listener to get the updated metadata.",
+        "complexTypes": [
+          "AudioPlayerDefaultParams"
+        ],
+        "slug": "updatemetadata"
+      },
+      {
+        "name": "getDuration",
+        "signature": "(params: AudioPlayerDefaultParams) => Promise<{ duration: number; }>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerDefaultParams"
+          }
+        ],
+        "returns": "Promise<{ duration: number; }>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Get the duration of the audio source.\n\nShould be called once the audio is ready (`onAudioReady`).",
+        "complexTypes": [
+          "AudioPlayerDefaultParams"
+        ],
+        "slug": "getduration"
+      },
+      {
+        "name": "getCurrentTime",
+        "signature": "(params: AudioPlayerDefaultParams) => Promise<{ currentTime: number; }>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerDefaultParams"
+          }
+        ],
+        "returns": "Promise<{ currentTime: number; }>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Get the current time of the audio source being played.",
+        "complexTypes": [
+          "AudioPlayerDefaultParams"
+        ],
+        "slug": "getcurrenttime"
+      },
+      {
+        "name": "play",
+        "signature": "(params: AudioPlayerDefaultParams) => Promise<void>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerDefaultParams"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Play the audio source.",
+        "complexTypes": [
+          "AudioPlayerDefaultParams"
+        ],
+        "slug": "play"
+      },
+      {
+        "name": "pause",
+        "signature": "(params: AudioPlayerDefaultParams) => Promise<void>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerDefaultParams"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Pause the audio source.",
+        "complexTypes": [
+          "AudioPlayerDefaultParams"
+        ],
+        "slug": "pause"
+      },
+      {
+        "name": "seek",
+        "signature": "(params: AudioPlayerDefaultParams & { timeInSeconds: number; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerDefaultParams & { timeInSeconds: number; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Seek the audio source to a specific time.",
+        "complexTypes": [
+          "AudioPlayerDefaultParams"
+        ],
+        "slug": "seek"
+      },
+      {
+        "name": "stop",
+        "signature": "(params: AudioPlayerDefaultParams) => Promise<void>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerDefaultParams"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Stop playing the audio source and reset the current time to zero.",
+        "complexTypes": [
+          "AudioPlayerDefaultParams"
+        ],
+        "slug": "stop"
+      },
+      {
+        "name": "setVolume",
+        "signature": "(params: AudioPlayerDefaultParams & { volume: number; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerDefaultParams & { volume: number; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Set the volume of the audio source. Should be a decimal less than or equal to `1.00`.\n\nThis is useful for background music.",
+        "complexTypes": [
+          "AudioPlayerDefaultParams"
+        ],
+        "slug": "setvolume"
+      },
+      {
+        "name": "setRate",
+        "signature": "(params: AudioPlayerDefaultParams & { rate: number; }) => Promise<void>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerDefaultParams & { rate: number; }"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Set the rate for the audio source to be played at.\nShould be a decimal. An example being `1` is normal speed, `0.5` being half the speed and `1.5` being 1.5 times faster.",
+        "complexTypes": [
+          "AudioPlayerDefaultParams"
+        ],
+        "slug": "setrate"
+      },
+      {
+        "name": "isPlaying",
+        "signature": "(params: AudioPlayerDefaultParams) => Promise<{ isPlaying: boolean; }>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerDefaultParams"
+          }
+        ],
+        "returns": "Promise<{ isPlaying: boolean; }>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Wether or not the audio source is currently playing.",
+        "complexTypes": [
+          "AudioPlayerDefaultParams"
+        ],
+        "slug": "isplaying"
+      },
+      {
+        "name": "destroy",
+        "signature": "(params: AudioPlayerDefaultParams) => Promise<void>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerDefaultParams"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Destroy all resources for the audio source.\nThe audio source with `useForNotification = true` must be destroyed last.",
+        "complexTypes": [
+          "AudioPlayerDefaultParams"
+        ],
+        "slug": "destroy"
+      },
+      {
+        "name": "onAppGainsFocus",
+        "signature": "(params: AudioPlayerListenerParams, callback: () => void) => Promise<AudioPlayerListenerResult>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerListenerParams"
+          },
+          {
+            "name": "callback",
+            "docs": "",
+            "type": "() => void"
+          }
+        ],
+        "returns": "Promise<AudioPlayerListenerResult>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Register a callback for when the app comes to the foreground.",
+        "complexTypes": [
+          "AudioPlayerListenerResult",
+          "AudioPlayerListenerParams"
+        ],
+        "slug": "onappgainsfocus"
+      },
+      {
+        "name": "onAppLosesFocus",
+        "signature": "(params: AudioPlayerListenerParams, callback: () => void) => Promise<AudioPlayerListenerResult>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerListenerParams"
+          },
+          {
+            "name": "callback",
+            "docs": "",
+            "type": "() => void"
+          }
+        ],
+        "returns": "Promise<AudioPlayerListenerResult>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Registers a callback from when the app goes to the background.",
+        "complexTypes": [
+          "AudioPlayerListenerResult",
+          "AudioPlayerListenerParams"
+        ],
+        "slug": "onapplosesfocus"
+      },
+      {
+        "name": "onAudioReady",
+        "signature": "(params: AudioPlayerListenerParams, callback: () => void) => Promise<AudioPlayerListenerResult>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerListenerParams"
+          },
+          {
+            "name": "callback",
+            "docs": "",
+            "type": "() => void"
+          }
+        ],
+        "returns": "Promise<AudioPlayerListenerResult>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Registers a callback for when the audio source is ready to be played.",
+        "complexTypes": [
+          "AudioPlayerListenerResult",
+          "AudioPlayerListenerParams"
+        ],
+        "slug": "onaudioready"
+      },
+      {
+        "name": "onAudioEnd",
+        "signature": "(params: AudioPlayerListenerParams, callback: () => void) => Promise<AudioPlayerListenerResult>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerListenerParams"
+          },
+          {
+            "name": "callback",
+            "docs": "",
+            "type": "() => void"
+          }
+        ],
+        "returns": "Promise<AudioPlayerListenerResult>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Registers a callback for when the audio source has ended (reached the end of the audio).",
+        "complexTypes": [
+          "AudioPlayerListenerResult",
+          "AudioPlayerListenerParams"
+        ],
+        "slug": "onaudioend"
+      },
+      {
+        "name": "onPlaybackStatusChange",
+        "signature": "(params: AudioPlayerListenerParams, callback: (result: { status: 'playing' | 'paused' | 'stopped'; }) => void) => Promise<AudioPlayerListenerResult>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerListenerParams"
+          },
+          {
+            "name": "callback",
+            "docs": "",
+            "type": "(result: { status: 'playing' | 'paused' | 'stopped'; }) => void"
+          }
+        ],
+        "returns": "Promise<AudioPlayerListenerResult>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "1.0.0"
+          }
+        ],
+        "docs": "Registers a callback for when state of playback for the audio source has changed by external controls.\nThis should be used to update your UI when the notification/external controls are used to control the playback.\n\nOn Android, this also gets fired when your app changes the state (e.g. by calling `play`, `pause` or `stop`)\ndue to a limitation of not knowing where the state change came from, either the app or the `MediaSession` (external controls).\n\nIt may be fixed in the future for Android if a solution is found so don't rely on it when your app itself changes the state.",
+        "complexTypes": [
+          "AudioPlayerListenerResult",
+          "AudioPlayerListenerParams"
+        ],
+        "slug": "onplaybackstatuschange"
+      },
+      {
+        "name": "onMetadataUpdate",
+        "signature": "(params: AudioPlayerListenerParams, callback: (result: AudioPlayerMetadataUpdateListenerEvent) => void) => Promise<AudioPlayerListenerResult>",
+        "parameters": [
+          {
+            "name": "params",
+            "docs": "",
+            "type": "AudioPlayerListenerParams"
+          },
+          {
+            "name": "callback",
+            "docs": "",
+            "type": "(result: AudioPlayerMetadataUpdateListenerEvent) => void"
+          }
+        ],
+        "returns": "Promise<AudioPlayerListenerResult>",
+        "tags": [
+          {
+            "name": "since",
+            "text": "2.2.0"
+          }
+        ],
+        "docs": "Registers a callback for when metadata updates from a URL.\n\nIt will return all data from the URL response, not just the required data. So you could have the metadata endpoint return other data that you may need.",
+        "complexTypes": [
+          "AudioPlayerListenerResult",
+          "AudioPlayerListenerParams",
+          "AudioPlayerMetadataUpdateListenerEvent"
+        ],
+        "slug": "onmetadataupdate"
+      }
+    ],
+    "properties": []
+  },
+  "interfaces": [
+    {
+      "name": "AudioPlayerPrepareParams",
+      "slug": "audioplayerprepareparams",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "audioSource",
+          "tags": [
+            {
+              "text": "A public web source: https://example.com/example.mp3",
+              "name": "example"
+            },
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "A URI for the audio file to play",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "albumTitle",
+          "tags": [
+            {
+              "text": "2.1.0",
+              "name": "since"
+            }
+          ],
+          "docs": "The album title/name of the audio file to be used on the notification",
+          "complexTypes": [],
+          "type": "string | undefined"
+        },
+        {
+          "name": "artistName",
+          "tags": [
+            {
+              "text": "2.1.0",
+              "name": "since"
+            }
+          ],
+          "docs": "The artist name of the audio file to be used on the notification",
+          "complexTypes": [],
+          "type": "string | undefined"
+        },
+        {
+          "name": "friendlyTitle",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "The title/name of the audio file to be used on the notification",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "useForNotification",
+          "tags": [
+            {
+              "text": "false",
+              "name": "default"
+            },
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Whether to use this audio file for the notification.\nThis is considered the primary audio to play.\n\nIt must be created first and you may only have one at a time.",
+          "complexTypes": [],
+          "type": "boolean"
+        },
+        {
+          "name": "artworkSource",
+          "tags": [
+            {
+              "text": "A public web source: https://example.com/artwork.png",
+              "name": "example"
+            },
+            {
+              "text": "An in-app source: images/artwork.png",
+              "name": "example"
+            },
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "A URI for the album art image to display on the Android/iOS notification.\n\nCan also be an in-app source. Pulls from `android/app/src/assets/public` and `ios/App/App/public`.\nIf using [Vite](https://vitejs.dev/guide/assets.html#the-public-directory),\nyou would put the image in your `public` folder and the build process will copy to `dist`\nwhich in turn will be copied to the Android/iOS assets by Capacitor.\n\nA PNG is the best option with square dimensions. 1200 x 1200px is a good option.",
+          "complexTypes": [],
+          "type": "string | undefined"
+        },
+        {
+          "name": "isBackgroundMusic",
+          "tags": [
+            {
+              "text": "false",
+              "name": "default"
+            },
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Is this audio for background music/audio.\n\nShould not be `true` when `useForNotification = true`.",
+          "complexTypes": [],
+          "type": "boolean | undefined"
+        },
+        {
+          "name": "loop",
+          "tags": [
+            {
+              "text": "false",
+              "name": "default"
+            },
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Whether or not to loop other audio like background music\nwhile the primary audio (`useForNotification = true`) is playing.",
+          "complexTypes": [],
+          "type": "boolean | undefined"
+        },
+        {
+          "name": "showSeekBackward",
+          "tags": [
+            {
+              "text": "true",
+              "name": "default"
+            },
+            {
+              "text": "1.2.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Whether or not to show the seek backward button on the OS's notification.\nOnly has affect when `useForNotification = true`.",
+          "complexTypes": [],
+          "type": "boolean | undefined"
+        },
+        {
+          "name": "showSeekForward",
+          "tags": [
+            {
+              "text": "true",
+              "name": "default"
+            },
+            {
+              "text": "1.2.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Whether or not to show the seek forward button on the OS's notification.\nOnly has affect when `useForNotification = true`.",
+          "complexTypes": [],
+          "type": "boolean | undefined"
+        },
+        {
+          "name": "seekBackwardTime",
+          "tags": [
+            {
+              "text": "5",
+              "name": "default"
+            },
+            {
+              "text": "2.3.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Time to seek backward in seconds on the OS's notification.\nOnly has affect when `showSeekBackward = true`.",
+          "complexTypes": [],
+          "type": "number | undefined"
+        },
+        {
+          "name": "seekForwardTime",
+          "tags": [
+            {
+              "text": "5",
+              "name": "default"
+            },
+            {
+              "text": "2.3.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Time to seek forward in seconds on the OS's notification.\nOnly has affect when `showSeekForward = true`.",
+          "complexTypes": [],
+          "type": "number | undefined"
+        },
+        {
+          "name": "metadataUpdateUrl",
+          "tags": [
+            {
+              "text": "2.2.0",
+              "name": "since"
+            }
+          ],
+          "docs": "The URL to fetch metadata updates at the specified interval. Typically used for a radio stream.\nSee the section on [Metadata Updates](#metadata-updates) for more info.\nOnly has affect when `useForNotification = true`.",
+          "complexTypes": [],
+          "type": "string | undefined"
+        },
+        {
+          "name": "metadataUpdateInterval",
+          "tags": [
+            {
+              "text": "15",
+              "name": "default"
+            },
+            {
+              "text": "2.2.0",
+              "name": "since"
+            }
+          ],
+          "docs": "The interval to fetch metadata updates in seconds.",
+          "complexTypes": [],
+          "type": "number | undefined"
+        }
+      ]
+    },
+    {
+      "name": "AudioPlayerDefaultParams",
+      "slug": "audioplayerdefaultparams",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "audioId",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "Any string to differentiate different audio files.",
+          "complexTypes": [],
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "AudioPlayerListenerResult",
+      "slug": "audioplayerlistenerresult",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "callbackId",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "AudioPlayerListenerParams",
+      "slug": "audioplayerlistenerparams",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "audioId",
+          "tags": [
+            {
+              "text": "1.0.0",
+              "name": "since"
+            }
+          ],
+          "docs": "The `audioId` set when `create` was called.",
+          "complexTypes": [],
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "AudioPlayerMetadataUpdateListenerEvent",
+      "slug": "audioplayermetadataupdatelistenerevent",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "album_title",
+          "tags": [
+            {
+              "text": "2.2.0",
+              "name": "since"
+            }
+          ],
+          "docs": "The album title",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "artist_name",
+          "tags": [
+            {
+              "text": "2.2.0",
+              "name": "since"
+            }
+          ],
+          "docs": "The artist name",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "song_title",
+          "tags": [
+            {
+              "text": "2.2.0",
+              "name": "since"
+            }
+          ],
+          "docs": "The song title",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "artwork_source",
+          "tags": [
+            {
+              "text": "2.2.0",
+              "name": "since"
+            }
+          ],
+          "docs": "A URI for the album art image to display on the Android/iOS notification.",
+          "complexTypes": [],
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "enums": [],
+  "typeAliases": [],
+  "pluginConfigs": []
+}
