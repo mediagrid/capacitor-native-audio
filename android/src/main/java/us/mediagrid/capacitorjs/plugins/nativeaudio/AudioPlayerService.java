@@ -1,4 +1,5 @@
 package us.mediagrid.capacitorjs.plugins.nativeaudio;
+
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.IBinder;
@@ -45,11 +46,10 @@ public class AudioPlayerService extends MediaSessionService {
             .setWakeMode(C.WAKE_MODE_NETWORK)
             .build();
         player.setPlayWhenReady(false);
-        mediaSession =
-            new MediaSession.Builder(this, player)
-                .setCallback(new MediaSessionCallback(this))
-                .setSessionActivity(sessionActivityPendingIntent)
-                .build();
+        mediaSession = new MediaSession.Builder(this, player)
+            .setCallback(new MediaSessionCallback(this))
+            .setSessionActivity(sessionActivityPendingIntent)
+            .build();
     }
 
     @Override
